@@ -18,9 +18,6 @@ export default function Header() {
           </Link>
         </div>
         <nav className="hidden md:flex items-center gap-6">
-          <Link href="/" className="text-sm font-medium hover:text-theme-primary">
-            ホーム
-          </Link>
           <Link href="/find-kosen" className="text-sm font-medium hover:text-theme-primary">
             高専を探す
           </Link>
@@ -29,9 +26,6 @@ export default function Header() {
           </Link>
           <Link href="#" className="text-sm font-medium hover:text-theme-primary">
             体験談
-          </Link>
-          <Link href="/collect-info" className="text-sm font-medium hover:text-theme-primary">
-            情報収集
           </Link>
           <Link href="/direct-question" className="text-sm font-medium hover:text-theme-primary">
             直接質問
@@ -42,14 +36,15 @@ export default function Header() {
         </nav>
         <div className="flex items-center gap-4">
           <Button
+            asChild
             variant="outline"
             size="sm"
             className="hidden md:flex border-theme-primary text-theme-primary hover:bg-theme-primary/10"
           >
-            ログイン
+            <Link href="/login">ログイン</Link>
           </Button>
-          <Button size="sm" className="bg-theme-primary hover:bg-theme-primary/90 text-white">
-            新規登録
+          <Button asChild size="sm" className="bg-theme-primary hover:bg-theme-primary/90 text-white">
+            <Link href="/signup">新規登録</Link>
           </Button>
         </div>
       </div>

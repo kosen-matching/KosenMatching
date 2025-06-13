@@ -16,6 +16,7 @@ import { ArrowRight, Home, BookOpen, Briefcase, Brain, MapPin, Users, Sparkles, 
 import Link from "next/link"
 import Image from "next/image"
 import { Progress } from "@/components/ui/progress"
+import Header from "@/components/header"
 
 // 型定義
 interface QuestionBase {
@@ -488,26 +489,7 @@ export default function DiagnosisPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-sky-100 dark:from-slate-900 dark:to-sky-900">
-      <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between py-4">
-          <Link href="/" className="flex items-center">
-            <Image src="/images/logo.png" alt="高専マッチング" width={180} height={50} className="h-10 w-auto" />
-          </Link>
-          <div className="flex items-center gap-4">
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="text-theme-primary hover:text-theme-primary/80 hover:bg-theme-primary/10"
-            >
-              <Link href="/">
-                <Home className="h-4 w-4 mr-2" />
-                ホームに戻る
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <main className="container py-8 md:py-12">
         <div className="max-w-4xl mx-auto">
