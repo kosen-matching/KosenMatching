@@ -8,6 +8,10 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
+    domains: ['upload.wikimedia.org', 'placehold.jp'],
+  },
+  experimental: {
+    allowedDevOrigins: ["http://match-test"],
   },
 }
 

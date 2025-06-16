@@ -41,6 +41,7 @@ export default function LoginPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(values),
+        credentials: 'include',
       });
 
       if (!res.ok) {
@@ -48,7 +49,7 @@ export default function LoginPage() {
         throw new Error(data.message || 'Something went wrong');
       }
 
-      router.push('/'); // Redirect to home page on successful login
+      window.location.href = '/'; // Redirect to home page with a hard refresh
     } catch (err) {
         if (err instanceof Error) {
             setError(err.message);

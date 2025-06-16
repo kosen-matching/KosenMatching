@@ -20,7 +20,7 @@ const formSchema = z.object({
   username: z.string().min(2, { message: 'ユーザー名は2文字以上で入力してください。' }),
   email: z.string().email({ message: '有効なメールアドレスを入力してください。' }),
   password: z.string().min(6, { message: 'パスワードは6文字以上で入力してください。' }),
-  kosenEmail: z.string().email({ message: '有効な高専メールアドレスを入力してください。' }).optional(),
+  kosenEmail: z.string().email({ message: '有効な高専メールアドレスを入力してください。' }).optional().or(z.literal('')),
   kosenId: z.string().optional(),
 }).superRefine((data, ctx) => {
   if (data.userType === 'student' || data.userType === 'alumnus') {
@@ -33,7 +33,7 @@ const formSchema = z.object({
     }
   }
   if (data.userType === 'student') {
-    if (!data.kosenEmail) {
+    if (!data.kosenEmail || data.kosenEmail.trim() === '') {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['kosenEmail'],
@@ -55,7 +55,7 @@ export default function SignUpPage() {
       username: '',
       email: '',
       password: '',
-      kosenId: undefined,
+      kosenId: '',
       kosenEmail: '',
     },
   });
@@ -66,13 +66,23 @@ export default function SignUpPage() {
     setLoading(true);
     setError(null);
 
+    const processedValues = { ...values };
+    if (processedValues.userType !== 'student') {
+      processedValues.kosenEmail = undefined;
+    }
+    if (processedValues.userType === 'examinee') {
+      processedValues.kosenId = undefined;
+    }
+
     try {
+      console.log('Sending signup data:', processedValues);
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(values),
+        body: JSON.stringify(processedValues),
+        credentials: 'include',
       });
 
       if (!res.ok) {
@@ -80,7 +90,7 @@ export default function SignUpPage() {
         throw new Error(data.message || 'Something went wrong');
       }
 
-      router.push('/'); // Redirect to home page on successful sign-up
+      window.location.href = '/'; // Redirect to home page with a hard refresh
     } catch (err) {
         if (err instanceof Error) {
             setError(err.message);

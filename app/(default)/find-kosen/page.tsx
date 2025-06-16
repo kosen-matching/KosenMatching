@@ -1,7 +1,6 @@
 'use client'; // 検索機能のためにClient Componentにする
 
 import { useState, useEffect } from 'react'; // React Hooksをインポート
-import Header from "@/components/header";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"; // Inputコンポーネントをインポート
@@ -42,7 +41,6 @@ export default function FindKosenPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-muted/40">
-      <Header />
       <main className="flex-1 py-10 md:py-12 lg:py-16">
         <div className="container mx-auto px-4 md:px-6">
           <div className="mb-10 text-center">

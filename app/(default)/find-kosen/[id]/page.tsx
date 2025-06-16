@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Header from "@/components/header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -105,18 +105,21 @@ const findKosenById = (id: string): Kosen | undefined => {
 
 export default function KosenDetailPage() {
   const params = useParams();
+  const router = useRouter(); // Initialize useRouter
   const kosenId = params?.id as string;
   const kosen = findKosenById(kosenId);
 
   if (!kosen) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-muted/40">
-        <Header />
         <main className="flex-1 container mx-auto px-4 md:px-6 py-12 text-center">
           <h1 className="text-2xl font-bold">高専情報が見つかりません</h1>
           <p className="mt-2 text-muted-foreground">指定されたIDの高専は存在しないか、情報がありません。</p>
-          <Button asChild className="mt-6">
-            <Link href="/find-kosen">高専一覧へ戻る</Link>
+          <Button
+            className="mt-6"
+            onClick={() => router.push('/find-kosen')}
+          >
+            高専一覧へ戻る
           </Button>
         </main>
       </div>
@@ -125,7 +128,6 @@ export default function KosenDetailPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-muted/40">
-      <Header />
       <main className="flex-1 py-10 md:py-12 lg:py-16">
         <div className="container mx-auto px-4 md:px-6">
           <div className="grid md:grid-cols-5 gap-8 lg:gap-12">

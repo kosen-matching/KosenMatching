@@ -1,28 +1,21 @@
-import mongoose, { Schema, models } from 'mongoose';
+import { Collection, Db, ObjectId } from 'mongodb';
 
-const UserSchema = new Schema({
-  email: {
-    type: String,
-    unique: true,
-    required: [true, 'Email is required.'],
-    match: [/.+\@.+\..+/, 'Please enter a valid email.'],
-  },
-  username: {
-    type: String,
-    required: [true, 'Username is required.'],
-    unique: true,
-  },
-  password: {
-    type: String,
-    required: [true, 'Password is required.'],
-    select: false,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+export type UserType = 'student' | 'alumnus' | 'examinee';
 
-const User = models.User || mongoose.model('User', UserSchema);
+export interface User {
+  _id?: ObjectId;
+  email: string;
+  username: string;
+  password?: string;
+  profileImageUrl?: string;
+  userType: UserType;
+  kosenId?: string;
+  kosenEmail?: string;
+  createdAt: Date;
+}
 
-export default User; 
+export const USERS_COLLECTION = 'users';
+
+export const getUsersCollection = (db: Db): Collection<User> => {
+  return db.collection<User>(USERS_COLLECTION);
+}; 

@@ -1,35 +1,50 @@
-import mongoose from 'mongoose';
+import { MongoClient, Db } from 'mongodb';
 
-const MONGODB_URI = process.env.MONGODB_URI;
+const uri = process.env.MONGODB_URI;
+const dbName = 'match'; // データベース名
 
-if (!MONGODB_URI) {
-  throw new Error(
-    'Please define the MONGODB_URI environment variable inside .env.local'
-  );
+if (!uri) {
+  throw new Error('Please define the MONGODB_URI environment variable');
 }
 
-let cached = global.mongoose;
+let client: MongoClient | null = null;
+let clientPromise: Promise<MongoClient> | null = null;
 
-if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
+// Next.js の開発モードでは HMR により複数回実行される可能性があるため、
+// グローバル変数を使って接続をキャッシュする
+declare global {
+  // eslint-disable-next-line no-var
+  var _mongoClientPromise: Promise<MongoClient>;
 }
 
-async function dbConnect() {
-  if (cached.conn) {
-    return cached.conn;
+if (process.env.NODE_ENV === 'development') {
+  if (!global._mongoClientPromise) {
+    client = new MongoClient(uri);
+    global._mongoClientPromise = client.connect();
+    console.log("Development: Initializing MongoDB connection...");
   }
-
-  if (!cached.promise) {
-    const opts = {
-      bufferCommands: false,
-    };
-
-    cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {
-      return mongoose;
-    });
+  clientPromise = global._mongoClientPromise;
+} else {
+  if (!clientPromise) {
+    client = new MongoClient(uri);
+    clientPromise = client.connect();
+    console.log("Production: Initializing MongoDB connection...");
   }
-  cached.conn = await cached.promise;
-  return cached.conn;
 }
 
-export default dbConnect; 
+export async function getDb(): Promise<Db> {
+  if (!clientPromise) {
+     // このパスは通常通らないはずだが、念のため
+     throw new Error("MongoDB client promise not initialized!");
+  }
+  try {
+    const connectedClient = await clientPromise;
+    // console.log("MongoDB connection retrieved."); // ログが多すぎる場合はコメントアウト
+    return connectedClient.db(dbName);
+  } catch (error) {
+    console.error("Failed to get MongoDB connection:", error);
+    // エラー発生時に再接続を試みるようにPromiseをリセットするなどの処理も考慮できる
+    clientPromise = null; // 次回再初期化を試みる
+    throw error;
+  }
+}
