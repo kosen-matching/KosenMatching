@@ -26,7 +26,9 @@ export default function AccountSettingsDialog({ isOpen, onClose, onProfileUpdate
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
-  const [profileImageUrl, setProfileImageUrl] = useState('');
+  const [profileImageUrl, setProfileImageUrl] = useState(''); // GridFSのファイルIDを保存
+  const [selectedFile, setSelectedFile] = useState<File | null>(null); // 選択されたファイル
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null); // 選択されたファイルのプレビュー用URL
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
@@ -67,11 +69,39 @@ export default function AccountSettingsDialog({ isOpen, onClose, onProfileUpdate
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    let newProfileImageUrl = profileImageUrl;
+
     try {
+      if (selectedFile) {
+        // ファイルが選択されている場合、まずGridFSにアップロード
+        const formData = new FormData();
+        formData.append('profileImage', selectedFile);
+
+        const uploadRes = await fetch('/api/account/upload-profile-image', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!uploadRes.ok) {
+          const errorData = await uploadRes.json();
+          toast({
+            title: '画像のアップロードに失敗しました', 
+            description: errorData.message || '不明なエラーが発生しました。',
+            variant: 'destructive'
+          });
+          return;
+        }
+        const uploadData = await uploadRes.json();
+        newProfileImageUrl = uploadData.fileId; // アップロードされたファイルのIDを取得
+      } else if (profileImageUrl === '' && user?.profileImageUrl) {
+        // 画像がクリアされた場合
+        newProfileImageUrl = '';
+      }
+
       const res = await fetch('/api/account/update-profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, profileImageUrl }),
+        body: JSON.stringify({ username, email, profileImageUrl: newProfileImageUrl }), // GridFSのファイルIDを送信
         credentials: 'include',
       });
 
@@ -79,6 +109,9 @@ export default function AccountSettingsDialog({ isOpen, onClose, onProfileUpdate
         const data = await res.json();
         setUser(data.user);
         onProfileUpdateSuccess(data.user); // 更新成功をヘッダーに通知
+        setSelectedFile(null); // ファイルアップロード成功後、選択されたファイルをクリア
+        setPreviewImageUrl(null); // プレビューもクリア
+        setProfileImageUrl(data.user.profileImageUrl || ''); // 最新のGridFSファイルIDをセット
         toast({
           title: 'プロフィールを更新しました', 
           description: 'ユーザー名、メールアドレス、プロフィール画像が更新されました。'
@@ -169,21 +202,43 @@ export default function AccountSettingsDialog({ isOpen, onClose, onProfileUpdate
               <CardContent>
                 <form onSubmit={handleProfileUpdate} className="space-y-4">
                   <div className="flex flex-col items-center gap-4 mb-4">
-                    {profileImageUrl ? (
-                      <img src={profileImageUrl} alt="プロフィール画像" className="w-24 h-24 rounded-full object-cover" />
+                    {previewImageUrl ? (
+                      <img src={previewImageUrl} alt="プレビュー画像" className="w-24 h-24 rounded-full object-cover" />
+                    ) : profileImageUrl ? (
+                      <img src={`/api/images/${profileImageUrl}`} alt="プロフィール画像" className="w-24 h-24 rounded-full object-cover" />
                     ) : (
                       <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-sm">
                         No Image
                       </div>
                     )}
-                    <Label htmlFor="profile-image-url">プロフィール画像URL</Label>
+                    <Label htmlFor="profile-image-upload">プロフィール画像をアップロード</Label>
                     <Input
-                      id="profile-image-url"
-                      type="url"
-                      value={profileImageUrl}
-                      onChange={(e) => setProfileImageUrl(e.target.value)}
-                      placeholder="https://example.com/your-image.jpg"
+                      id="profile-image-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setSelectedFile(e.target.files[0]);
+                          setPreviewImageUrl(URL.createObjectURL(e.target.files[0])); // プレビュー用URLをセット
+                        } else {
+                          setSelectedFile(null);
+                          setPreviewImageUrl(null);
+                        }
+                      }}
                     />
+                    {(selectedFile || profileImageUrl) && ( // 選択中のファイルがあるか、既存の画像がある場合に表示
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          setSelectedFile(null);
+                          setPreviewImageUrl(null); // プレビューをクリア
+                          setProfileImageUrl(''); // GridFSのファイルIDをクリア (データベースから削除は別途APIが必要)
+                        }}
+                        className="w-full text-red-500 hover:text-red-600"
+                      >
+                        画像をクリア
+                      </Button>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="username">ユーザー名</Label>

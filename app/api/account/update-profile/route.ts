@@ -35,7 +35,7 @@ export async function PUT(req: Request) {
     const usersCollection = getUsersCollection(db);
 
     const body = await req.json();
-    const { username, email } = body;
+    const { username, email, profileImageUrl } = body;
 
     // Validate input
     if (!username || !email) {
@@ -66,7 +66,7 @@ export async function PUT(req: Request) {
     // Update user profile
     const result = await usersCollection.updateOne(
       { _id: userId },
-      { $set: { username, email } }
+      { $set: { username, email, profileImageUrl } }
     );
 
     if (result.modifiedCount === 0) {

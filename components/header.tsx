@@ -14,7 +14,7 @@ import {
 import AccountSettingsDialog from './account-settings-dialog';
 
 export default function Header() {
-  const [user, setUser] = useState<{ username: string; email: string } | null>(null);
+  const [user, setUser] = useState<{ username: string; email: string; profileImageUrl?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -141,25 +141,36 @@ export default function Header() {
                     <div>Loading...</div>
                   ) : user ? (
                     <>
-                      <div className="text-base font-medium">
-                        <p>{user.username}</p>
-                        <p className="text-gray-500">{user.email}</p>
+                      <div className="flex items-center gap-3 mb-2">
+                        {user.profileImageUrl ? (
+                          <Image
+                            src={`/api/images/${user.profileImageUrl}`}
+                            alt="プロフィール画像"
+                            width={40}
+                            height={40}
+                            className="rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-sm">
+                            {user.username.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-base font-medium">{user.username}</p>
+                          <p className="text-gray-500 text-sm">{user.email}</p>
+                        </div>
                       </div>
-                      <button
-                        className="w-full"
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-theme-primary text-theme-primary hover:bg-theme-primary/10 w-full"
                         onClick={() => {
                           setIsAccountSettingsDialogOpen(true);
                           setMobileMenuOpen(false);
                         }}
                       >
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="border-theme-primary text-theme-primary hover:bg-theme-primary/10 w-full"
-                        >
-                          アカウント設定
-                        </Button>
-                      </button>
+                        アカウント設定
+                      </Button>
                       <Button
                         onClick={() => {
                           handleLogout();
@@ -202,17 +213,33 @@ export default function Header() {
             <div>Loading...</div>
           ) : user ? (
             <>
-              <div className="text-sm font-medium">
-                <p>{user.username}</p>
-                <p className="text-gray-500">{user.email}</p>
+              <div className="flex items-center gap-3">
+                {user.profileImageUrl ? (
+                  <Image
+                    src={`/api/images/${user.profileImageUrl}`}
+                    alt="プロフィール画像"
+                    width={32}
+                    height={32}
+                    className="rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
+                    {user.username.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <p className="text-sm font-medium">{user.username}</p>
+                  <p className="text-gray-500">{user.email}</p>
+                </div>
               </div>
-              <button
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-theme-primary text-theme-primary hover:bg-theme-primary/10"
                 onClick={() => setIsAccountSettingsDialogOpen(true)}
               >
-                <Button variant="outline" size="sm" className="border-theme-primary text-theme-primary hover:bg-theme-primary/10">
-                  アカウント設定
-                </Button>
-              </button>
+                アカウント設定
+              </Button>
               <Button onClick={handleLogout} size="sm" className="bg-red-500 hover:bg-red-600 text-white">
                 ログアウト
               </Button>
