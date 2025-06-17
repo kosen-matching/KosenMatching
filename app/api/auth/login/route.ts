@@ -40,13 +40,17 @@ export async function POST(req: Request) {
 
     const cookie = serialize('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV !== 'development',
+      secure: false,
       sameSite: 'strict',
       maxAge: MAX_AGE,
       path: '/',
     });
 
-    const response = NextResponse.json({ message: 'Logged in successfully' }, { status: 200 });
+    const response = NextResponse.json({ message: 'Logged in successfully', user: {
+      _id: user._id,
+      email: user.email,
+      username: user.username,
+    } }, { status: 200 });
     response.headers.set('Set-Cookie', cookie);
 
     return response;

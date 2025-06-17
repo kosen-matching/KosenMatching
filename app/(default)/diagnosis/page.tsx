@@ -572,7 +572,9 @@ export default function DiagnosisPage() {
         <div className="container">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center">
-              <Image src="/images/logo.png" alt="高専マッチング" width={120} height={30} className="h-7 w-auto" />
+              <div className="relative h-7 w-[7rem]">
+                <Image src="/images/logo.png" alt="高専マッチング" fill className="object-contain" />
+              </div>
             </div>
             <p className="text-sm text-muted-foreground">
               &copy; {new Date().getFullYear()} 高専マッチング. All rights reserved.

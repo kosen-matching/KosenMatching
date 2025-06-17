@@ -7,10 +7,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Menu } from 'lucide-react';
 import {
-  Drawer,
-  DrawerContent,
-  DrawerTrigger,
-} from '@/components/ui/drawer';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import AccountSettingsDialog from './account-settings-dialog';
 
 export default function Header() {
@@ -63,13 +65,14 @@ export default function Header() {
       <div className="container flex h-16 items-center justify-between py-2">
         <div className="flex items-center">
           <Link href="/" className="flex items-center">
-            <Image 
-              src="/images/logo.png" 
-              alt="高専マッチング ロゴ" 
-              width={224}
-              height={56}
-              className="h-14 w-auto"
-            />
+            <div className="relative h-14 w-56">
+              <Image 
+                src="/images/logo.png" 
+                alt="高専マッチング ロゴ" 
+                fill
+                className="object-contain"
+              />
+            </div>
           </Link>
         </div>
         <nav className="hidden md:flex items-center gap-6">
@@ -90,16 +93,16 @@ export default function Header() {
           </Link>
         </nav>
         <div className="md:hidden flex items-center">
-          <Drawer open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <DrawerTrigger asChild>
+          <DropdownMenu open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden">
                 <Menu className="h-6 w-6" />
                 <span className="sr-only">Toggle menu</span>
               </Button>
-            </DrawerTrigger>
-            <DrawerContent className="fixed bottom-0 left-0 right-0 max-h-[96%] mt-24 rounded-t-[10px] flex flex-col">
-              <div className="flex-1 overflow-auto p-4">
-                <nav className="flex flex-col items-start gap-4">
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-screen max-w-xs md:max-w-none p-4 bg-blue-50">
+              <nav className="flex flex-col items-start gap-4">
+                <DropdownMenuItem asChild>
                   <Link
                     href="/find-kosen"
                     className="text-lg font-medium hover:text-theme-primary"
@@ -107,6 +110,8 @@ export default function Header() {
                   >
                     高専を探す
                   </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link
                     href="#"
                     className="text-lg font-medium hover:text-theme-primary"
@@ -114,6 +119,8 @@ export default function Header() {
                   >
                     適性診断
                   </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link
                     href="#"
                     className="text-lg font-medium hover:text-theme-primary"
@@ -121,6 +128,8 @@ export default function Header() {
                   >
                     体験談
                   </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link
                     href="/direct-question"
                     className="text-lg font-medium hover:text-theme-primary"
@@ -128,6 +137,8 @@ export default function Header() {
                   >
                     直接質問
                   </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link
                     href="#"
                     className="text-lg font-medium hover:text-theme-primary"
@@ -135,31 +146,35 @@ export default function Header() {
                   >
                     よくある質問
                   </Link>
-                </nav>
-                <div className="mt-8 flex flex-col gap-4">
-                  {loading ? (
-                    <div>Loading...</div>
-                  ) : user ? (
-                    <>
-                      <div className="flex items-center gap-3 mb-2">
-                        {user.profileImageUrl ? (
-                          <Image
-                            src={`/api/images/${user.profileImageUrl}`}
-                            alt="プロフィール画像"
-                            width={40}
-                            height={40}
-                            className="rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-sm">
-                            {user.username.charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                        <div>
-                          <p className="text-base font-medium">{user.username}</p>
-                          <p className="text-gray-500 text-sm">{user.email}</p>
+                </DropdownMenuItem>
+              </nav>
+              <DropdownMenuSeparator className="my-4" />
+              <div className="flex flex-col gap-4">
+                {loading ? (
+                  <DropdownMenuItem>Loading...</DropdownMenuItem>
+                ) : user ? (
+                  <>
+                    <DropdownMenuItem className="flex items-center gap-3 mb-2 px-2 py-1.5 cursor-default hover:bg-transparent focus:bg-transparent active:bg-transparent focus:text-current">
+                      {user.profileImageUrl ? (
+                        <Image
+                          key={user.profileImageUrl}
+                          src={`/api/images/${user.profileImageUrl}`}
+                          alt="プロフィール画像"
+                          width={40}
+                          height={40}
+                          className="rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-sm">
+                          {user.username.charAt(0).toUpperCase()}
                         </div>
+                      )}
+                      <div>
+                        <p className="text-base font-medium hover:underline">{user.username}</p>
+                        <p className="text-gray-500 text-sm">{user.email}</p>
                       </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
                       <Button
                         variant="outline"
                         size="sm"
@@ -171,6 +186,8 @@ export default function Header() {
                       >
                         アカウント設定
                       </Button>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
                       <Button
                         onClick={() => {
                           handleLogout();
@@ -181,9 +198,11 @@ export default function Header() {
                       >
                         ログアウト
                       </Button>
-                    </>
-                  ) : (
-                    <>
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <>
+                    <DropdownMenuItem asChild>
                       <Button
                         asChild
                         variant="outline"
@@ -193,6 +212,8 @@ export default function Header() {
                       >
                         <Link href="/login">ログイン</Link>
                       </Button>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
                       <Button
                         asChild
                         size="sm"
@@ -201,12 +222,12 @@ export default function Header() {
                       >
                         <Link href="/signup">新規登録</Link>
                       </Button>
-                    </>
-                  )}
-                </div>
+                    </DropdownMenuItem>
+                  </>
+                )}
               </div>
-            </DrawerContent>
-          </Drawer>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         <div className="hidden md:flex items-center gap-4">
           {loading ? (
@@ -216,6 +237,7 @@ export default function Header() {
               <div className="flex items-center gap-3">
                 {user.profileImageUrl ? (
                   <Image
+                    key={user.profileImageUrl}
                     src={`/api/images/${user.profileImageUrl}`}
                     alt="プロフィール画像"
                     width={32}
@@ -228,7 +250,7 @@ export default function Header() {
                   </div>
                 )}
                 <div>
-                  <p className="text-sm font-medium">{user.username}</p>
+                  <p className="text-sm font-medium hover:underline">{user.username}</p>
                   <p className="text-gray-500">{user.email}</p>
                 </div>
               </div>
@@ -250,22 +272,28 @@ export default function Header() {
                 asChild
                 variant="outline"
                 size="sm"
-                className="hidden md:flex border-theme-primary text-theme-primary hover:bg-theme-primary/10"
+                className="border-theme-primary text-theme-primary hover:bg-theme-primary/10"
               >
                 <Link href="/login">ログイン</Link>
               </Button>
-              <Button asChild size="sm" className="bg-theme-primary hover:bg-theme-primary/90 text-white">
+              <Button
+                asChild
+                size="sm"
+                className="bg-theme-primary hover:bg-theme-primary/90 text-white"
+              >
                 <Link href="/signup">新規登録</Link>
               </Button>
             </>
           )}
         </div>
+        <AccountSettingsDialog
+          isOpen={isAccountSettingsDialogOpen}
+          onClose={() => setIsAccountSettingsDialogOpen(false)}
+          user={user}
+          onUpdateProfile={(updatedUser) => setUser(updatedUser)}
+          onLogout={handleLogout}
+        />
       </div>
-      <AccountSettingsDialog
-        isOpen={isAccountSettingsDialogOpen}
-        onClose={() => setIsAccountSettingsDialogOpen(false)}
-        onProfileUpdateSuccess={setUser}
-      />
     </header>
   );
 } 

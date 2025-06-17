@@ -36,13 +36,13 @@ export default function ContactSection() {
                 </div>
                 <div className="space-y-2">
                   <label
-                    htmlFor="email"
+                    htmlFor="contact-email"
                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                   >
                     メールアドレス
                   </label>
                   <Input
-                    id="email"
+                    id="contact-email"
                     type="email"
                     placeholder="example@example.com"
                     className="focus:border-theme-primary focus:ring-theme-primary/20"

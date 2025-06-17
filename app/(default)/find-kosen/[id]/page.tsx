@@ -1,13 +1,16 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import Header from "@/components/header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 import Image from "next/image";
-import { MapPin, ExternalLink, BookOpen, Info, Users, BarChart, MessageSquare, ImageOff, ShieldCheck } from "lucide-react";
+import { MapPin, ExternalLink, BookOpen, Info, Users, BarChart, MessageSquare, ImageOff, ShieldCheck, Camera, LogIn, GalleryHorizontal } from "lucide-react";
+import { ImageUploadForm } from '@/components/kosen-image-upload-form';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // 更新されたKosenインターフェース
 interface Kosen {
@@ -19,6 +22,12 @@ interface Kosen {
   departments?: string[];
   description?: string;
   imageUrl?: string;
+}
+
+// ApprovedImage type
+interface ApprovedImage {
+  _id: string;
+  fileId: string;
 }
 
 export const kosenList: Kosen[] = [
@@ -105,9 +114,50 @@ const findKosenById = (id: string): Kosen | undefined => {
 
 export default function KosenDetailPage() {
   const params = useParams();
-  const router = useRouter(); // Initialize useRouter
+  const router = useRouter();
   const kosenId = params?.id as string;
   const kosen = findKosenById(kosenId);
+  const [user, setUser] = useState<{ username: string; email: string; } | null>(null);
+  const [loadingUser, setLoadingUser] = useState(true);
+  const [approvedImages, setApprovedImages] = useState<ApprovedImage[]>([]);
+  const [loadingImages, setLoadingImages] = useState(true);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch('/api/auth/me', { credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data.user);
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user:', error);
+        setUser(null);
+      } finally {
+        setLoadingUser(false);
+      }
+    };
+
+    const fetchApprovedImages = async () => {
+      if (!kosenId) return;
+      try {
+        const res = await fetch(`/api/kosen/${kosenId}/images`);
+        if (res.ok) {
+          const data = await res.json();
+          setApprovedImages(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch approved images:', error);
+      } finally {
+        setLoadingImages(false);
+      }
+    };
+
+    fetchUser();
+    fetchApprovedImages();
+  }, [kosenId]);
 
   if (!kosen) {
     return (
@@ -167,10 +217,11 @@ export default function KosenDetailPage() {
 
             <div className="md:col-span-3">
               <Tabs defaultValue="overview" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-4 elegant-tabs-list">
+                <TabsList className="grid w-full grid-cols-4 mb-4 elegant-tabs-list">
                   <TabsTrigger value="overview" className="elegant-tab-trigger">概要・特色</TabsTrigger>
                   <TabsTrigger value="departments" className="elegant-tab-trigger">設置学科</TabsTrigger>
-                  <TabsTrigger value="reviews" className="elegant-tab-trigger">学生の声</TabsTrigger>
+                  <TabsTrigger value="gallery" className="elegant-tab-trigger">ギャラリー</TabsTrigger>
+                  <TabsTrigger value="reviews" className="elegant-tab-trigger">声・投稿</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="overview">
@@ -212,6 +263,49 @@ export default function KosenDetailPage() {
                         </ul>
                       ) : (
                         <p className="text-base text-muted-foreground italic">設置学科の情報は現在ありません。</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="gallery">
+                  <Card className="elegant-card">
+                    <CardHeader>
+                      <CardTitle className="text-xl font-semibold flex items-center">
+                        <GalleryHorizontal className="mr-2 h-5 w-5" /> ギャラリー
+                      </CardTitle>
+                      <CardDescription>ユーザーから投稿された写真</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {loadingImages ? (
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                          {[...Array(6)].map((_, i) => (
+                            <Skeleton key={i} className="aspect-video w-full" />
+                          ))}
+                        </div>
+                      ) : approvedImages.length > 0 ? (
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                          {approvedImages.map((image) => (
+                            <a key={image._id} href={`/api/images/${image.fileId}`} target="_blank" rel="noopener noreferrer">
+                              <div className="relative aspect-video w-full rounded-md overflow-hidden border group">
+                                <Image
+                                  src={`/api/images/${image.fileId}`}
+                                  alt={`${kosen.name}の投稿画像`}
+                                  fill
+                                  className="object-cover transition-transform duration-300 group-hover:scale-105"
+                                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                />
+                                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </div>
+                            </a>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-10 border-2 border-dashed rounded-lg">
+                          <ImageOff className="mx-auto h-10 w-10 text-muted-foreground" />
+                          <p className="mt-4 text-muted-foreground">まだ承認された画像はありません。</p>
+                          <p className="text-sm text-muted-foreground">最初の画像を投稿してみませんか？ (「声・投稿」タブから)</p>
+                        </div>
                       )}
                     </CardContent>
                   </Card>
@@ -266,6 +360,38 @@ export default function KosenDetailPage() {
                           </Button>
                         </div>
                       </div>
+                    </CardContent>
+                  </Card>
+                  
+                  {/* Image Upload Card */}
+                  <Card className="elegant-card mt-6">
+                    <CardHeader>
+                      <CardTitle className="text-xl font-semibold flex items-center">
+                        <Camera className="mr-2 h-5 w-5" /> 画像を投稿して共有する
+                      </CardTitle>
+                       <CardDescription>この高専の写真や動画を投稿して、みんなに魅力を伝えましょう。</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {loadingUser ? (
+                        <div className="flex items-center space-x-4">
+                          <Skeleton className="h-12 w-12 rounded-full" />
+                          <div className="space-y-2">
+                            <Skeleton className="h-4 w-[250px]" />
+                            <Skeleton className="h-4 w-[200px]" />
+                          </div>
+                        </div>
+                      ) : user ? (
+                        <ImageUploadForm kosenId={kosen.id} />
+                      ) : (
+                        <div className="text-center text-muted-foreground p-4 border-2 border-dashed rounded-lg">
+                           <LogIn className="mx-auto h-8 w-8 mb-2" />
+                          <p className="font-semibold mb-2">ログインが必要です</p>
+                          <p className="text-sm mb-4">画像を投稿するには、ログインまたは新規登録をしてください。</p>
+                          <Button asChild>
+                            <Link href="/login">ログインページへ</Link>
+                          </Button>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </TabsContent>

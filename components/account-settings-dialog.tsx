@@ -14,16 +14,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import Link from 'next/link';
 
 interface AccountSettingsDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onProfileUpdateSuccess: (user: { username: string; email: string; profileImageUrl?: string }) => void; // プロフィール更新成功時のコールバック
+  user: { username: string; email: string; profileImageUrl?: string } | null;
+  onUpdateProfile: (updatedUser: { username: string; email: string; profileImageUrl?: string }) => void; // プロフィール更新成功時のコールバック
+  onLogout: () => Promise<void>; // ログアウト関数を追加
 }
 
-export default function AccountSettingsDialog({ isOpen, onClose, onProfileUpdateSuccess }: AccountSettingsDialogProps) {
-  const [user, setUser] = useState<{ username: string; email: string; profileImageUrl?: string } | null>(null);
-  const [loading, setLoading] = useState(true);
+export default function AccountSettingsDialog({ isOpen, onClose, user, onUpdateProfile, onLogout }: AccountSettingsDialogProps) {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [profileImageUrl, setProfileImageUrl] = useState(''); // GridFSのファイルIDを保存
@@ -32,40 +33,23 @@ export default function AccountSettingsDialog({ isOpen, onClose, onProfileUpdate
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!isOpen) return; // ダイアログが閉じている場合はフェッチしない
+    if (!isOpen || !user) return; // ダイアログが閉じているかユーザー情報がない場合は何もしない
 
-    const fetchUser = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch('/api/auth/me', { credentials: 'include' });
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data.user);
-          setUsername(data.user.username);
-          setEmail(data.user.email);
-          setProfileImageUrl(data.user.profileImageUrl || '');
-        } else {
-          setUser(null);
-          // ダイアログ表示中に認証切れの場合、ログインページへリダイレクト
-          router.push('/login');
-          onClose(); // ダイアログを閉じる
-        }
-      } catch (error) {
-        console.error('Failed to fetch user:', error);
-        setUser(null);
-        router.push('/login');
-        onClose(); // ダイアログを閉じる
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
-  }, [isOpen, router, onClose]); // isOpenが変更されたら再度フェッチ
+    setUsername(user.username);
+    setEmail(user.email);
+    setProfileImageUrl(user.profileImageUrl || '');
+    // Check if the user is an admin
+    if (process.env.NEXT_PUBLIC_ADMIN_EMAIL && user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
+      setIsAdmin(true);
+    } else {
+      setIsAdmin(false);
+    }
+  }, [isOpen, user]); // isOpenとuserが変更されたら実行
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,13 +91,13 @@ export default function AccountSettingsDialog({ isOpen, onClose, onProfileUpdate
 
       if (res.ok) {
         const data = await res.json();
-        setUser(data.user);
-        onProfileUpdateSuccess(data.user); // 更新成功をヘッダーに通知
+        // ユーザー情報を更新し、親コンポーネントにも通知
+        onUpdateProfile(data.user);
         setSelectedFile(null); // ファイルアップロード成功後、選択されたファイルをクリア
         setPreviewImageUrl(null); // プレビューもクリア
         setProfileImageUrl(data.user.profileImageUrl || ''); // 最新のGridFSファイルIDをセット
         toast({
-          title: 'プロフィールを更新しました', 
+          title: 'プロフィールを更新しました',
           description: 'ユーザー名、メールアドレス、プロフィール画像が更新されました。'
         });
       } else {
@@ -188,11 +172,7 @@ export default function AccountSettingsDialog({ isOpen, onClose, onProfileUpdate
             プロフィール情報とパスワードを更新できます。
           </DialogDescription>
         </DialogHeader>
-        {loading ? (
-          <div className="flex justify-center items-center h-48">Loading...</div>
-        ) : !user ? (
-          <div className="text-center text-red-500">ユーザー情報を読み込めませんでした。ログインしてください。</div>
-        ) : (
+        {user ? (
           <div className="grid gap-4 py-4">
             <Card className="mb-4">
               <CardHeader>
@@ -208,7 +188,7 @@ export default function AccountSettingsDialog({ isOpen, onClose, onProfileUpdate
                       <img src={`/api/images/${profileImageUrl}`} alt="プロフィール画像" className="w-24 h-24 rounded-full object-cover" />
                     ) : (
                       <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-sm">
-                        No Image
+                        {user?.username.charAt(0).toUpperCase()}
                       </div>
                     )}
                     <Label htmlFor="profile-image-upload">プロフィール画像をアップロード</Label>
@@ -260,7 +240,9 @@ export default function AccountSettingsDialog({ isOpen, onClose, onProfileUpdate
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full">プロフィールを更新</Button>
+                  <Button type="submit" className="w-full bg-theme-primary hover:bg-theme-primary/90">
+                    プロフィールを更新
+                  </Button>
                 </form>
               </CardContent>
             </Card>
@@ -293,7 +275,7 @@ export default function AccountSettingsDialog({ isOpen, onClose, onProfileUpdate
                     />
                   </div>
                   <div>
-                    <Label htmlFor="confirm-new-password">新しいパスワード（確認）</Label>
+                    <Label htmlFor="confirm-new-password">新しいパスワード（確認用）</Label>
                     <Input
                       id="confirm-new-password"
                       type="password"
@@ -302,11 +284,32 @@ export default function AccountSettingsDialog({ isOpen, onClose, onProfileUpdate
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full">パスワードを更新</Button>
+                  <Button type="submit" className="w-full bg-theme-primary hover:bg-theme-primary/90">
+                    パスワードを更新
+                  </Button>
                 </form>
               </CardContent>
             </Card>
+
+            {isAdmin && (
+              <Button asChild variant="outline" className="w-full mt-4">
+                <Link href="/admin/dashboard">管理者ダッシュボードへ</Link>
+              </Button>
+            )}
+
+            <Button
+              variant="destructive"
+              className="w-full mt-4"
+              onClick={() => {
+                onLogout();
+                onClose();
+              }}
+            >
+              ログアウト
+            </Button>
           </div>
+        ) : (
+          <div className="text-center text-red-500">ユーザー情報を読み込めませんでした。ログインしてください。</div>
         )}
       </DialogContent>
     </Dialog>
