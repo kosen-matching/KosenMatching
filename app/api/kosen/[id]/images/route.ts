@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 
 export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const kosenId = params.id;
+  const { id: kosenId } = await params;
 
   if (!kosenId) {
     return NextResponse.json({ message: 'Kosen ID is required' }, { status: 400 });
@@ -15,10 +15,39 @@ export async function GET(
     const db = await getDb();
     const kosenImagesCollection = db.collection('kosen_images');
 
-    const approvedImages = await kosenImagesCollection.find(
-      { kosenId: kosenId, status: 'approved' },
-      { projection: { fileId: 1, _id: 1 } } // Only need the fileId
-    ).sort({ createdAt: -1 }).toArray();
+    const approvedImages = await kosenImagesCollection.aggregate([
+      {
+        $match: {
+          kosenId: kosenId,
+          status: 'approved',
+        },
+      },
+      {
+        $sort: { createdAt: -1 },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'userId',
+          foreignField: '_id',
+          as: 'uploaderInfo',
+        },
+      },
+      {
+        $unwind: {
+          path: '$uploaderInfo',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          fileId: 1,
+          uploader: {
+            username: '$uploaderInfo.username',
+          },
+        },
+      },
+    ]).toArray();
 
     return NextResponse.json(approvedImages, { status: 200 });
 

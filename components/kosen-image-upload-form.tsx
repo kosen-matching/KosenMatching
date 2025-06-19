@@ -5,13 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, LogIn } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import Link from 'next/link';
 
 interface ImageUploadFormProps {
   kosenId: string;
+  user: { username: string; email: string; role?: 'admin' | 'user' } | null;
 }
 
-export function ImageUploadForm({ kosenId }: ImageUploadFormProps) {
+export function ImageUploadForm({ kosenId, user }: ImageUploadFormProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -74,6 +77,25 @@ export function ImageUploadForm({ kosenId }: ImageUploadFormProps) {
       setIsUploading(false);
     }
   };
+
+  if (!user) {
+    return (
+        <Card className="text-center">
+            <CardHeader>
+                <CardTitle className="flex items-center justify-center gap-2">
+                    <LogIn className="h-6 w-6" />
+                    ログインが必要です
+                </CardTitle>
+                <CardDescription>画像を投稿するには、ログインまたは新規登録をしてください。</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Button asChild className="w-full">
+                    <Link href="/login">ログインページへ</Link>
+                </Button>
+            </CardContent>
+        </Card>
+    )
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">

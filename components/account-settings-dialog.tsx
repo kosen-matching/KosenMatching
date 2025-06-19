@@ -19,7 +19,7 @@ import Link from 'next/link';
 interface AccountSettingsDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  user: { username: string; email: string; profileImageUrl?: string } | null;
+  user: { username: string; email: string; profileImageUrl?: string; role?: 'admin' | 'user' } | null;
   onUpdateProfile: (updatedUser: { username: string; email: string; profileImageUrl?: string }) => void; // プロフィール更新成功時のコールバック
   onLogout: () => Promise<void>; // ログアウト関数を追加
 }

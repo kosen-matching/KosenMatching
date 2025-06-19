@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { GridFSBucket, GridFSFile } from 'mongodb';
 import { Readable } from 'stream';
+import { verifyAuth } from '@/lib/auth';
 
 // formidableがNext.jsのAPIルートで動作するために必要
 export const config = {
@@ -11,6 +12,13 @@ export const config = {
 };
 
 export async function POST(req: NextRequest) {
+  // 認証チェックを追加
+  const authResult = await verifyAuth();
+  
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const db = await getDb();
     const bucket = new GridFSBucket(db, { bucketName: 'profile_images' });
@@ -29,7 +37,11 @@ export async function POST(req: NextRequest) {
     const readable = Readable.from(fileBuffer);
     
     const uploadStream = bucket.openUploadStream(filename, {
-      metadata: { originalName: filename, mimeType: mimeType },
+      metadata: { 
+        originalName: filename, 
+        mimeType: mimeType,
+        userId: authResult.userId // アップロードしたユーザーのIDも記録
+      },
     });
     
     // ストリームをパイプして、Promiseで完了を待つ

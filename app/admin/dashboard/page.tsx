@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { kosenList } from '@/app/(default)/find-kosen/[id]/page'; // 高専名を取得するためにインポート
+import { kosenList } from '@/lib/kosen-data'; // 高専名を取得するためにインポート
 
 import {
   Table,

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Menu } from 'lucide-react';
+import { Menu, User } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +16,7 @@ import {
 import AccountSettingsDialog from './account-settings-dialog';
 
 export default function Header() {
-  const [user, setUser] = useState<{ username: string; email: string; profileImageUrl?: string } | null>(null);
+  const [user, setUser] = useState<{ username: string; email: string; profileImageUrl?: string; role?: 'admin' | 'user' } | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -233,39 +233,44 @@ export default function Header() {
           {loading ? (
             <div>Loading...</div>
           ) : user ? (
-            <>
-              <div className="flex items-center gap-3">
-                {user.profileImageUrl ? (
-                  <Image
-                    key={user.profileImageUrl}
-                    src={`/api/images/${user.profileImageUrl}`}
-                    alt="プロフィール画像"
-                    width={32}
-                    height={32}
-                    className="rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
-                    {user.username.charAt(0).toUpperCase()}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center gap-2 p-1 pr-2">
+                  {user.profileImageUrl ? (
+                    <Image
+                      key={user.profileImageUrl}
+                      src={`/api/images/${user.profileImageUrl}`}
+                      alt="プロフィール画像"
+                      width={32}
+                      height={32}
+                      className="rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                      <User className="h-5 w-5 text-gray-500" />
+                    </div>
+                  )}
+                  <span className="text-sm font-medium">{user.username}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem className="cursor-default focus:bg-transparent">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user.username}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user.email}
+                    </p>
                   </div>
-                )}
-                <div>
-                  <p className="text-sm font-medium hover:underline">{user.username}</p>
-                  <p className="text-gray-500">{user.email}</p>
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-theme-primary text-theme-primary hover:bg-theme-primary/10"
-                onClick={() => setIsAccountSettingsDialogOpen(true)}
-              >
-                アカウント設定
-              </Button>
-              <Button onClick={handleLogout} size="sm" className="bg-red-500 hover:bg-red-600 text-white">
-                ログアウト
-              </Button>
-            </>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setIsAccountSettingsDialogOpen(true)}>
+                  アカウント設定
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout} className="text-red-500 focus:text-red-500">
+                  ログアウト
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <>
               <Button

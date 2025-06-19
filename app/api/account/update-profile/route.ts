@@ -1,34 +1,17 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
 import { getDb } from '@/lib/db';
 import { getUsersCollection } from '@/models/User';
 import { ObjectId, GridFSBucket } from 'mongodb';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key';
-
-interface DecodedToken {
-  userId: string;
-  iat: number;
-  exp: number;
-}
+import { verifyAuth } from '@/lib/auth';
 
 export async function PUT(req: Request) {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('token')?.value;
-
-  if (!token) {
-    return NextResponse.json({ message: '認証されていません' }, { status: 401 });
+  const authResult = await verifyAuth();
+  
+  if (authResult instanceof NextResponse) {
+    return authResult;
   }
 
-  let userId: ObjectId;
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
-    userId = new ObjectId(decoded.userId);
-  } catch (error) {
-    console.error('Invalid token:', error);
-    return NextResponse.json({ message: '無効なトークンです' }, { status: 401 });
-  }
+  const userId = new ObjectId(authResult.userId);
 
   try {
     const db = await getDb();

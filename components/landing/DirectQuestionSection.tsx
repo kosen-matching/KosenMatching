@@ -1,9 +1,12 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 // import { Input } from "@/components/ui/input" // 一旦コメントアウト
 // import { Textarea } from "@/components/ui/textarea" // 一旦コメントアウト
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card" // Card関連を追加
 import { ExternalLink, MessageCircle, ThumbsUp, Search } from "lucide-react" // アイコンを追加
+import Link from "next/link" // Linkコンポーネントを追加
 
 // ダミーデータ
 const dummyQuestions = [
@@ -53,10 +56,12 @@ export default function DirectQuestionSection() {
               高専のリアルな情報や、気になる疑問を直接質問できます。
             </p>
           </div>
-          <Button className="bg-blue-500 hover:bg-blue-600 text-white elegant-button shrink-0"> {/* ボタンの色を変更 */}
-            <MessageCircle className="mr-2 h-5 w-5" />
-            質問する
-          </Button>
+          <Link href="/direct-question/ask" passHref>
+            <Button className="bg-blue-500 hover:bg-blue-600 text-white elegant-button shrink-0"> {/* ボタンの色を変更 */}
+              <MessageCircle className="mr-2 h-5 w-5" />
+              質問する
+            </Button>
+          </Link>
         </div>
 
         {/* 検索バー (プレースホルダー) */}
@@ -70,7 +75,6 @@ export default function DirectQuestionSection() {
             />
           </div>
         </div>
-
 
         {/* メインコンテンツエリア - 質問リスト */}
         <div className="grid gap-6 md:gap-8">
@@ -130,69 +134,6 @@ export default function DirectQuestionSection() {
           <Button variant="outline" className="mr-2 border-gray-300 text-gray-700 hover:bg-gray-100">前へ</Button>
           <Button variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-100">次へ</Button>
         </div>
-
-        {/* 元のフォーム (一旦コメントアウト)
-        <div className="mx-auto grid max-w-3xl items-start gap-8 sm:grid-cols-1 md:gap-12 lg:max-w-4xl mt-12">
-          <div className="grid gap-6">
-            <div className="space-y-2">
-              <label
-                htmlFor="question-title"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                質問のタイトル (任意)
-              </label>
-              <Input
-                id="question-title"
-                placeholder="例：〇〇高専の〇〇学科の雰囲気について"
-                className="focus:border-theme-primary focus:ring-theme-primary/20"
-              />
-            </div>
-            <div className="space-y-2">
-              <label
-                htmlFor="question-content"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                質問内容
-              </label>
-              <Textarea
-                id="question-content"
-                placeholder="具体的な質問内容を記入してください。"
-                className="min-h-[150px] focus:border-theme-primary focus:ring-theme-primary/20"
-              />
-            </div>
-            <div className="space-y-2">
-              <label
-                htmlFor="nickname"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                ニックネーム (公開されます)
-              </label>
-              <Input
-                id="nickname"
-                placeholder="こうせん太郎"
-                className="focus:border-theme-primary focus:ring-theme-primary/20"
-              />
-            </div>
-            <div className="space-y-2">
-              <label
-                htmlFor="email"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                メールアドレス (回答があった場合にお知らせします。公開されません)
-              </label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="tarou@example.com"
-                className="focus:border-theme-primary focus:ring-theme-primary/20"
-              />
-            </div>
-            <Button type="submit" className="w-full bg-theme-primary hover:bg-theme-primary/90 text-white elegant-button">
-              質問を送信する
-            </Button>
-          </div>
-        </div>
-        */}
       </div>
     </section>
   )

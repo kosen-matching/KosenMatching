@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { GridFSBucket } from 'mongodb';
 import { Readable } from 'stream';
-import { cookies } from 'next/headers';
+// import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import { ObjectId } from 'mongodb';
 
@@ -22,8 +22,7 @@ export const config = {
 
 export async function POST(req: NextRequest) {
   // 1. Authenticate user
-  const cookieStore = await cookies();
-  const token = cookieStore.get('token')?.value;
+  const token = req.cookies.get('token')?.value;
 
   if (!token) {
     return NextResponse.json({ message: 'Not authenticated' }, { status: 401 });

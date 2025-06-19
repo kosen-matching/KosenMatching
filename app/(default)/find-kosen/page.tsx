@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"; // Inputコンポーネントをインポート
 import Link from "next/link";
 import { MapPin, ExternalLink, BookOpen, Search, Info } from "lucide-react"; // アイコン追加
-import { kosenList, Kosen } from "@/lib/kosen-data"; // kosenList と Kosen をインポート (kosenListFull -> kosenList, KosenData -> Kosen)
+import { kosenList } from "@/lib/kosen-data";
+import { Kosen } from "@/types/kosen"; // kosenList と Kosen をインポート (kosenListFull -> kosenList, KosenData -> Kosen)
 import Image from "next/image"; // next/image をインポート
 
 // 更新された高専データインターフェース
@@ -76,10 +77,17 @@ export default function FindKosenPage() {
                       <Image
                         src={kosen.imageUrl}
                         alt={`${kosen.name}の外観・ロゴ等`} // altテキストを汎用的に
-                        layout="fill"
-                        objectFit="cover"
-                        // className="rounded-t-lg" // 親divで角丸を指定するためこちらは不要な場合あり
+                        fill
+                        className="object-cover"
                       />
+                      {/* 画像クレジット表示 */}
+                      {kosen.imageCreditText && kosen.imageCreditUrl && (
+                        <div className="absolute bottom-1 right-1 bg-black bg-opacity-50 text-white text-xs p-1 rounded">
+                          <a href={kosen.imageCreditUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                            {kosen.imageCreditText}
+                          </a>
+                        </div>
+                      )}
                     </div>
                   )}
                   <CardHeader>

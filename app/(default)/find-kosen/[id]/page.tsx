@@ -1,129 +1,94 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import Header from "@/components/header";
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 import Image from "next/image";
-import { MapPin, ExternalLink, BookOpen, Info, Users, BarChart, MessageSquare, ImageOff, ShieldCheck, Camera, LogIn, GalleryHorizontal } from "lucide-react";
+import { MapPin, ExternalLink, BookOpen, Info, Users, BarChart, MessageSquare, ImageOff, ShieldCheck, Camera, LogIn, GalleryHorizontal, ChevronLeft, ChevronRight, Trash2, Edit } from "lucide-react";
 import { ImageUploadForm } from '@/components/kosen-image-upload-form';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ImagePreviewModal } from '@/components/image-preview-modal';
+import { useToast } from '@/components/ui/use-toast';
+import { kosenList } from '@/lib/kosen-data';
+import { Kosen } from '@/types/kosen';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 
-// 更新されたKosenインターフェース
-interface Kosen {
-  id: string;
-  name: string;
-  location: string; // 主な所在地。複数の場合は併記
-  website: string;
-  type: '国立' | '公立' | '私立';
-  departments?: string[];
-  description?: string;
-  imageUrl?: string;
-}
-
-// ApprovedImage type
 interface ApprovedImage {
   _id: string;
   fileId: string;
+  uploader?: {
+    username: string;
+  };
 }
 
-export const kosenList: Kosen[] = [
-  // --- 国立高専 (51校) ---
-  // 北海道 (4校)
-  { id: "hakodate", name: "函館工業高等専門学校", location: "北海道函館市", website: "https://www.hakodate-ct.ac.jp/", type: "国立", departments: ["生産システム工学科", "物質環境工学科", "社会基盤工学科", "情報工学科"], description: "函館の恵まれた自然環境の中で、ものづくりと地域創生に貢献できる技術者を育成。早期からのキャリア教育も充実。", imageUrl: "/images/kosen/hakodate.jpg" },
-  { id: "tomakomai", name: "苫小牧工業高等専門学校", location: "北海道苫小牧市", website: "https://www.tomakomai-ct.ac.jp/", type: "国立", departments: ["創造工学科（機械・電気電子系、情報・制御系、物質・環境系）"], description: "産業都市苫小牧に位置し、多様な分野をカバーする創造工学科が特色。PBL教育や国際交流も盛ん。", imageUrl: "/images/kosen/tomakomai.jpg" },
-  { id: "kushiro", name: "釧路工業高等専門学校", location: "北海道釧路市", website: "https://www.kushiro-ct.ac.jp/", type: "国立", departments: ["創造工学科（スマートメカニクスコース、エレクトロニクスコース、建築デザインコース）"], description: "1965年設置。人格、広い視野と創造力、チャレンジ精神を育む教育を目標とする。2年次よりコース選択。略称は釧路高専。", imageUrl: "/images/kosen/kushiro.jpg" },
-  { id: "asahikawa", name: "旭川工業高等専門学校", location: "北海道旭川市", website: "https://www.asahikawa-nct.ac.jp/", type: "国立", departments: ["機械システム工学科", "電気情報工学科", "システム制御情報工学科", "物質化学工学科"], description: "1962年設置。北海道旭川市に所在する国立高等専門学校。略称は旭川高専。校訓は「明朗誠実 自主創造」。国際的視野と人間性に富んだ実践的な技術者の育成を目指す。", imageUrl: "/images/kosen/asahikawa.jpg" },
-  // 東北 (6校)
-  { id: "hachinohe", name: "八戸工業高等専門学校", location: "青森県八戸市", website: "https://www.hachinohe-ct.ac.jp/", type: "国立", departments: ["機械システムデザインコース", "電気情報システムコース", "マテリアル・バイオシステムコース", "環境都市・建築デザインコース"], description: "青森県八戸市に位置する国立高等専門学校。地域産業界との連携を重視し、実践的技術者の育成に力を注いでいる。「自主探究」活動など、学生の主体的な学びを促す取り組みも特徴的。", imageUrl: "/images/kosen/hachinohe.jpg" },
-  { id: "ichinoseki", name: "一関工業高等専門学校", location: "岩手県一関市", website: "https://www.ichinoseki.ac.jp/", type: "国立", departments: ["未来創造工学科（機械・知能コース、電気・電子コース、情報・ソフトウェアコース、化学・バイオコース）"], description: "自然豊かな環境で、座学と実践をバランス良く学ぶ。DCON（高専ディープラーニングコンテスト）での活躍も知られる。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Ichinoseki_National_College_of_Technology_2010.jpg/640px-Ichinoseki_National_College_of_Technology_2010.jpg" },
-  { id: "sendai_natori", name: "仙台高等専門学校（名取キャンパス）", location: "宮城県名取市", website: "https://www.sendai-nct.ac.jp/natori-campus/", type: "国立", departments: ["機械システム工学科", "電気システム工学科", "マテリアル環境工学科", "建築デザイン学科"], description: "2009年に宮城工業高等専門学校と仙台電波工業高等専門学校が統合・再編されて発足した国立高等専門学校。名取キャンパスは旧宮城工業高等専門学校。地域社会や産業界との連携にも力を入れている。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Sendai_NCT_Natori_Campus_Main_Building_20210508.jpg/640px-Sendai_NCT_Natori_Campus_Main_Building_20210508.jpg" },
-  { id: "sendai_hirose", name: "仙台高等専門学校（広瀬キャンパス）", location: "宮城県仙台市青葉区", website: "https://www.sendai-nct.ac.jp/hirose-campus/", type: "国立", departments: ["情報システムコース", "情報通信コース", "知能エレクトロニクスコース", "応用化学コース", "ロボティクスコース"], description: "2009年に宮城工業高等専門学校と仙台電波工業高等専門学校が統合・再編されて発足した国立高等専門学校。広瀬キャンパスは旧仙台電波工業高等専門学校。地域社会や産業界との連携にも力を入れている。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Sendai_NCT_Hirose_Campus_Building_No_1_20210508.jpg/640px-Sendai_NCT_Hirose_Campus_Building_No_1_20210508.jpg" },
-  { id: "akita", name: "秋田工業高等専門学校", location: "秋田県秋田市", website: "https://www.akita-nct.ac.jp/", type: "国立", departments: ["創造システム工学科 （機械系、電気系、土木系）"], description: "1962年設置。秋田県秋田市に位置し、「創造実践」を教育理念に掲げる。少人数教育と早期専門教育により、実践的技術者を育成。地域の課題解決にも積極的に取り組む。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Akita_National_College_of_Technology_administration_building_20120504.jpg/640px-Akita_National_College_of_Technology_administration_building_20120504.jpg" },
-  { id: "tsuruoka", name: "鶴岡工業高等専門学校", location: "山形県鶴岡市", website: "https://www.tsuruoka-nct.ac.jp/", type: "国立", departments: ["創造工学科（機械コース、電気・電子コース、情報コース、生物・化学コース）"], description: "1963年設立。山形県鶴岡市に位置する国立高等専門学校。「自学自習 理魂工才」を教育理念に、実践的技術者の育成を目指す。地域連携にも積極的。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Tsuruoka_National_College_of_Technology_Administration_Building_20110503.JPG/640px-Tsuruoka_National_College_of_Technology_Administration_Building_20110503.JPG" },
-  { id: "fukushima", name: "福島工業高等専門学校", location: "福島県いわき市", website: "https://www.fukushima-nct.ac.jp/", type: "国立", departments: ["機械システム工学科", "電気電子システム工学科", "化学・バイオ工学科", "都市システム工学科", "経営情報学科"], description: "1962年設立。福島県いわき市に位置する国立高等専門学校。略称は福島高専。幅広い教養と人間力、科学技術の基礎的素養、創造性と実践力を育成。文系学科も擁する点が特徴。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Fukushima_National_College_of_Technology_20110503.JPG/640px-Fukushima_National_College_of_Technology_20110503.JPG" },
-  // 関東信越 (7校)
-  { id: "ibaraki", name: "茨城工業高等専門学校", location: "茨城県ひたちなか市", website: "https://www.ibaraki-ct.ac.jp/", type: "国立", departments: ["機械・制御系（機械工学コース、制御工学コース）", "電気・電子系", "情報系", "化学・生物・環境系"], description: "1964年設置。茨城県ひたちなか市に所在する国立高等専門学校。国際社会に貢献できる教育研究拠点として、幅広い教養と豊かな人間性を持ち、深く専門の学芸を教授し、知的・実践的指導力を備えた創造的技術者を育成する。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Ibaraki_National_College_of_Technology_administration_building_20110503.JPG/640px-Ibaraki_National_College_of_Technology_administration_building_20110503.JPG" },
-  { id: "oyama", name: "小山工業高等専門学校", location: "栃木県小山市", website: "https://www.oyama-ct.ac.jp/", type: "国立", departments: ["機械工学科", "電気電子創造工学科", "物質工学科", "建築学科"], description: "1965年設立。栃木県小山市に位置する国立高等専門学校。「技術者である前に人間であれ」という初代校長の理念のもと、幅広い教養と豊かな人間性を備えた実践的技術者の育成を目指す。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Oyama_National_College_of_Technology_administration_building_20110503.JPG/640px-Oyama_National_College_of_Technology_administration_building_20110503.JPG" },
-  { id: "gunma", name: "群馬工業高等専門学校", location: "群馬県前橋市", website: "https://www.gunma-ct.ac.jp/", type: "国立", departments: ["機械工学科", "電子メディア工学科", "電子情報工学科", "物質工学科", "環境都市工学科"], description: "1962年設立。群馬県前橋市に位置する国立高等専門学校。創造性豊かな実践的技術者の育成を目標とし、地域社会との連携にも力を入れている。５つの専門学科を有する。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Gunma_National_College_of_Technology_library_20110503.JPG/640px-Gunma_National_College_of_Technology_library_20110503.JPG" },
-  { id: "kisarazu", name: "木更津工業高等専門学校", location: "千葉県木更津市", website: "https://www.kisarazu.ac.jp/", type: "国立", departments: ["機械工学科", "電気電子工学科", "電子制御工学科", "情報工学科", "環境都市工学科"], description: "1967年設立。千葉県木更津市に位置する国立高等専門学校。略称は木更津高専。教育理念は「深く専門の学芸を教授し、職業に必要な能力を育成する」。ものづくり教育を重視している。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Kisarazu_National_College_of_Technology_20120505.JPG/640px-Kisarazu_National_College_of_Technology_20120505.JPG" },
-  { id: "tokyo", name: "東京工業高等専門学校", location: "東京都八王子市", website: "https://www.tokyo-ct.ac.jp/", type: "国立", departments: ["機械工学科", "電気工学科", "電子工学科", "情報工学科", "物質工学科"], description: "1965年に設置された国立高等専門学校。東京都八王子市に位置し、略称は東京高専。豊かな人間性と社会性、国際性を備え、深く専門の学芸を教授し、新しい科学技術を創造できる実践的技術者の育成を目指しています。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Tokyo_National_College_of_Technology_Main_Gate.JPG/640px-Tokyo_National_College_of_Technology_Main_Gate.JPG" },
-  { id: "nagaoka", name: "長岡工業高等専門学校", location: "新潟県長岡市", website: "https://www.nagaoka-ct.ac.jp/", type: "国立", departments: ["機械工学科", "電気工学科", "電子制御工学科", "情報工学科", "環境都市工学科"], description: "新潟県長岡市に位置する国立高等専門学校。実践的・創造的な技術者育成を目指し、地域連携も重視。5学科を有し、特に「複合系」学科も充実。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Nagaoka_National_College_of_Technology_20110503.JPG/640px-Nagaoka_National_College_of_Technology_20110503.JPG" },
-  { id: "nagano", name: "長野工業高等専門学校", location: "長野県長野市", website: "https://www.nagano-nct.ac.jp/", type: "国立", departments: ["機械工学科", "電気電子工学科", "電子制御工学科", "情報工学科", "環境都市工学科"], description: "長野県長野市に位置する国立高等専門学校。技術者倫理と実践力を重視し、地域に貢献できる人材を育成。インターンシップや卒業研究に力を入れている。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Nagano_National_College_of_Technology_20110503.JPG/640px-Nagano_National_College_of_Technology_20110503.JPG" },
-  // 東海北陸 (8校)
-  { id: "toyama", name: "富山高等専門学校", location: "富山県（富山市・射水市）", website: "https://www.nc-toyama.ac.jp/", type: "国立", departments: ["機械システム工学科", "電気制御システム工学科", "物質化学工学科", "生物工学科", "国際流通情報学科", "商船学科", "電子情報工学科", "国際ビジネス学科"], description:"本郷キャンパスと射水キャンパスの2キャンパス体制。工学・商船学の融合。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/National_Institute_of_Technology%2C_Toyama_College_Imizu_Campus_Main_Gate_20130427.JPG/640px-National_Institute_of_Technology%2C_Toyama_College_Imizu_Campus_Main_Gate_20130427.JPG" },
-  { id: "ishikawa", name: "石川工業高等専門学校", location: "石川県河北郡津幡町", website: "https://www.ishikawa-nct.ac.jp/", type: "国立", departments: ["機械工学科", "電気工学科", "電子情報工学科", "環境都市工学科", "建築学科"], description: "石川県河北郡津幡町に位置する国立高等専門学校。実践的技術者の育成を目指し、地域連携も推進。国際交流や寮生活も特徴。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Ishikawa_National_College_of_Technology_20110503.JPG/640px-Ishikawa_National_College_of_Technology_20110503.JPG" },
-  { id: "fukui", name: "福井工業高等専門学校", location: "福井県鯖江市", website: "https://www.fukui-nct.ac.jp/", type: "国立", departments: ["機械工学科", "電気電子工学科", "情報工学科", "環境都市工学科", "建築学科"], description: "福井県鯖江市に位置する国立高等専門学校。「創造性豊かな実践的技術者の育成」を目指し、地域産業や文化との連携を重視。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Fukui_National_College_of_Technology_20110503.JPG/640px-Fukui_National_College_of_Technology_20110503.JPG" },
-  { id: "gifu", name: "岐阜工業高等専門学校", location: "岐阜県本巣市", website: "https://www.gifu-nct.ac.jp/", type: "国立", departments: ["機械工学科", "電気情報工学科", "電子制御工学科", "環境材料工学科", "建築学科"], description: "岐阜県本巣市に位置する国立高等専門学校。「地域とともに歩む、創造性豊かな実践的技術者の育成」を目指し、特色ある技術教育を展開。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Gifu_National_College_of_Technology_20110503.JPG/640px-Gifu_National_College_of_Technology_20110503.JPG" },
-  { id: "numazu", name: "沼津工業高等専門学校", location: "静岡県沼津市", website: "https://www.numazu-ct.ac.jp/", type: "国立", departments: ["機械工学科", "電気電子工学科", "電子制御工学科", "情報工学科", "環境都市工学科"], description: "静岡県沼津市に位置する国立高等専門学校。「創造性豊かな実践的技術者の育成」を目標に、地域産業や国際社会に貢献できる人材を輩出。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Numazu_National_College_of_Technology_20110503.JPG/640px-Numazu_National_College_of_Technology_20110503.JPG" },
-  { id: "toyota", name: "豊田工業高等専門学校", location: "愛知県豊田市", website: "https://www.toyota-ct.ac.jp/", type: "国立", departments: ["機械工学科", "電気・電子システム工学科", "情報工学科", "環境都市工学科", "建築学科"], description: "愛知県豊田市に位置する国立高等専門学校。トヨタ自動車との連携が深く、実践的な技術教育を展開。「ものづくり」を重視。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Toyota_National_College_of_Technology_20110503.JPG/640px-Toyota_National_College_of_Technology_20110503.JPG" },
-  { id: "toba_shosen", name: "鳥羽商船高等専門学校", location: "三重県鳥羽市", website: "https://www.toba-cmt.ac.jp/", type: "国立", departments: ["商船学科", "情報機械システム工学科"], description: "三重県鳥羽市に位置する商船系の国立高等専門学校。海事科学と工学技術を学び、海上技術者や陸上技術者を育成。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Toba_National_College_of_Maritime_Technology_20110503.JPG/640px-Toba_National_College_of_Maritime_Technology_20110503.JPG" },
-  { id: "suzuka", name: "鈴鹿工業高等専門学校", location: "三重県鈴鹿市", website: "https://www.suzuka-ct.ac.jp/", type: "国立", departments: ["機械工学科", "電気電子工学科", "電子情報工学科", "生物資源工学科", "環境都市工学科"], description: "三重県鈴鹿市に位置する国立高等専門学校。「創造性豊かな実践的技術者の育成」を目指し、地域産業や国際社会に貢献できる人材を輩出。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Suzuka_National_College_of_Technology_20110503.JPG/640px-Suzuka_National_College_of_Technology_20110503.JPG" },
-  // 近畿 (4校)
-  { id: "maizuru", name: "舞鶴工業高等専門学校", location: "京都府舞鶴市", website: "https://www.maizuru-ct.ac.jp/", type: "国立", departments: ["機械工学科", "電気情報工学科", "電子制御工学科", "建設システム工学科"], description: "京都府舞鶴市に位置する国立高等専門学校。「創造性と実践力を有する技術者の育成」を目指し、地域産業や国際社会に貢献できる人材を育成。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Maizuru_National_College_of_Technology_20110503.JPG/640px-Maizuru_National_College_of_Technology_20110503.JPG" },
-  { id: "akashi", name: "明石工業高等専門学校", location: "兵庫県明石市", website: "https://www.akashi.ac.jp/", type: "国立", departments: ["機械工学科", "電気情報工学科", "応用化学科", "建築学科", "都市システム工学科"], description: "兵庫県明石市に位置する国立高等専門学校。明石海峡大橋を望む環境で、実践的・創造的な技術者育成を目指す。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Akashi_National_College_of_Technology_20110503.JPG/640px-Akashi_National_College_of_Technology_20110503.JPG" },
-  { id: "nara", name: "奈良工業高等専門学校", location: "奈良県大和郡山市", website: "https://www.nara-k.ac.jp/", type: "国立", departments: ["機械工学科", "電気工学科", "電子工学科", "情報工学科", "物質化学工学科", "建築学科"], description: "奈良県大和郡山市に位置する国立高等専門学校。「技術者である前に人間であれ」を教育理念に、幅広い分野で活躍できる技術者を育成。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Nara_National_College_of_Technology_20110503.JPG/640px-Nara_National_College_of_Technology_20110503.JPG" },
-  { id: "wakayama", name: "和歌山工業高等専門学校", location: "和歌山県御坊市", website: "https://www.wakayama-nct.ac.jp/", type: "国立", departments: ["機械工学科", "電気情報工学科", "生物応用化学科", "環境都市工学科"], description: "和歌山県御坊市に位置する国立高等専門学校。地域産業や社会に貢献できる、実践的技術者の育成を目指す。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Wakayama_National_College_of_Technology_20110503.JPG/640px-Wakayama_National_College_of_Technology_20110503.JPG" },
-  // 中国 (8校)
-  { id: "yonago", name: "米子工業高等専門学校", location: "鳥取県米子市", website: "https://www.yonago-k.ac.jp/", type: "国立", departments: ["機械工学科", "電気情報工学科", "化学バイオ工学科", "建築学科", "開発・建設工学科"], description: "鳥取県米子市に位置する国立高等専門学校。「創造性豊かな実践的技術者の育成」を目指し、地域社会や国際社会に貢献できる人材を育成。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Yonago_National_College_of_Technology_20110503.JPG/640px-Yonago_National_College_of_Technology_20110503.JPG" },
-  { id: "matsue", name: "松江工業高等専門学校", location: "島根県松江市", website: "https://www.matsue-ct.jp/", type: "国立", departments: ["機械工学科", "電気工学科", "電子情報工学科", "環境・建設工学科", "建築学科"], description: "島根県松江市に位置する国立高等専門学校。「創造性豊かな実践的技術者の育成」を目指し、地域産業や国際社会に貢献できる人材を育成。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Matsue_National_College_of_Technology_20110503.JPG/640px-Matsue_National_College_of_Technology_20110503.JPG" },
-  { id: "tsuyama", name: "津山工業高等専門学校", location: "岡山県津山市", website: "https://www.tsuyama-ct.ac.jp/", type: "国立", departments: ["機械システム工学科", "電気電子システム工学科", "情報工学科", "環境建設工学科"], description: "岡山県津山市に位置する国立高等専門学校。「地域に根差し、世界をめざす創造的技術者の育成」を教育理念に掲げている。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Tsuyama_National_College_of_Technology_20120428.JPG/640px-Tsuyama_National_College_of_Technology_20120428.JPG" },
-  { id: "hiroshima_shosen", name: "広島商船高等専門学校", location: "広島県豊田郡大崎上島町", website: "https://www.hiroshima-cmt.ac.jp/", type: "国立", departments: ["商船学科", "流通情報工学科"], description: "広島県大崎上島町に位置する商船系の国立高等専門学校。海事科学と工学技術を学び、海上技術者や流通情報分野の技術者を育成。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Hiroshima_National_College_of_Maritime_Technology_20110503.JPG/640px-Hiroshima_National_College_of_Maritime_Technology_20110503.JPG" },
-  { id: "kure", name: "呉工業高等専門学校", location: "広島県呉市", website: "https://www.kure-nct.ac.jp/", type: "国立", departments: ["機械工学科", "電気情報工学科", "環境材料工学科", "建築学科"], description: "広島県呉市に位置する国立高等専門学校。「創造性豊かな実践的技術者の育成」を目指し、地域産業や社会に貢献できる人材を育成。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Kure_National_College_of_Technology_20110503.JPG/640px-Kure_National_College_of_Technology_20110503.JPG" },
-  { id: "tokuyama", name: "徳山工業高等専門学校", location: "山口県周南市", website: "https://www.tokuyama.ac.jp/", type: "国立", departments: ["機械電気工学科", "情報電子工学科", "土木建築工学科", "環境科学技術工学科"], description: "山口県周南市に位置する国立高等専門学校。「人間力豊かな実践的技術者の育成」を目指し、地域産業や社会に貢献できる人材を育成。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Tokuyama_College_of_Technology_20110503.jpg/640px-Tokuyama_College_of_Technology_20110503.jpg" },
-  { id: "ube", name: "宇部工業高等専門学校", location: "山口県宇部市", website: "https://www.ube-k.ac.jp/", type: "国立", departments: ["機械工学科", "電気工学科", "制御情報工学科", "化学工学科", "部材開発工学科", "共同システム工学専攻"], description: "山口県宇部市に位置する国立高等専門学校。「創造性豊かな実践的技術者の育成」を目指し、地域産業や国際社会に貢献できる人材を育成。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Ube_National_College_of_Technology_20110503.JPG/640px-Ube_National_College_of_Technology_20110503.JPG" },
-  { id: "oshima_shosen", name: "大島商船高等専門学校", location: "山口県大島郡周防大島町", website: "https://www.oshima-k.ac.jp/", type: "国立", departments: ["商船学科", "情報機械システム工学科"], description: "山口県周防大島町に位置する商船系の国立高等専門学校。海事科学と工学技術を学び、海上技術者や陸上技術者を育成。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Oshima_National_College_of_Maritime_Technology_20110503.JPG/640px-Oshima_National_College_of_Maritime_Technology_20110503.JPG" },
-  // 四国 (5校)
-  { id: "anan", name: "阿南工業高等専門学校", location: "徳島県阿南市", website: "https://www.anan-nct.ac.jp/", type: "国立", departments: ["機械工学科", "電気電子工学科", "情報工学科", "建設システム工学科"], description: "徳島県阿南市に位置する国立高等専門学校。「創造性豊かな実践的技術者の育成」を目指し、地域産業や国際社会に貢献できる人材を育成。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Anan_National_College_of_Technology_20110503.JPG/640px-Anan_National_College_of_Technology_20110503.JPG" },
-  { id: "kagawa", name: "香川高等専門学校", location: "香川県（高松市・三豊市）", website: "https://www.kagawa-nct.ac.jp/", type: "国立", departments: ["機械工学科", "電気情報工学科", "応用化学科", "建設環境工学科", "通商情報学科", "機械電子工学科", "情報通信工学科", "電子システム工学科", "香川高等専門学校専攻科（建設環境工学専攻、機械電子システム工学専攻、情報通信システム工学専攻）"], description:"高松キャンパスと詫間キャンパスの2キャンパス体制。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/National_Institute_of_Technology%2C_Kagawa_College_Takamatsu_Campus_Main_Gate_20130427.JPG/640px-National_Institute_of_Technology%2C_Kagawa_College_Takamatsu_Campus_Main_Gate_20130427.JPG" },
-  { id: "niihama", name: "新居浜工業高等専門学校", location: "愛媛県新居浜市", website: "https://www.niihama-nct.ac.jp/", type: "国立", departments: ["機械工学科", "電気情報工学科", "応用化学科", "環境材料工学科"], description: "愛媛県新居浜市に位置する国立高等専門学校。「創造性豊かな実践的技術者の育成」を目指し、地域産業や国際社会に貢献できる人材を育成。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Niihama_National_College_of_Technology_20110503.JPG/640px-Niihama_National_College_of_Technology_20110503.JPG" },
-  { id: "yuge_shosen", name: "弓削商船高等専門学校", location: "愛媛県越智郡上島町", website: "https://www.yuge.ac.jp/", type: "国立", departments: ["商船学科", "情報工学科", "ソーシャルデザイン学科"], description: "愛媛県上島町に位置する商船系の国立高等専門学校。商船学、情報工学、ソーシャルデザインを学び、地域や国際社会に貢献できる人材を育成。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Yuge_National_College_of_Maritime_Technology_20110503.JPG/640px-Yuge_National_College_of_Maritime_Technology_20110503.JPG" },
-  { id: "kochi", name: "高知工業高等専門学校", location: "高知県南国市", website: "https://www.kochi-ct.ac.jp/", type: "国立", departments: ["機械工学科", "電気工学科", "電子情報工学科", "環境都市工学科", "建築デザイン学科"], description: "高知県南国市に位置する国立高等専門学校。「創造性豊かな実践的技術者の育成」を目指し、地域産業や国際社会に貢献できる人材を育成。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Kochi_National_College_of_Technology_20110503.JPG/640px-Kochi_National_College_of_Technology_20110503.JPG" },
-  // 九州・沖縄 (9校)
-  { id: "kurume", name: "久留米工業高等専門学校", location: "福岡県久留米市", website: "https://www.kurume-nct.ac.jp/", type: "国立", departments: ["機械工学科", "電気電子工学科", "情報技術工学科", "生物応用化学科", "材料システム工学科"], description: "福岡県久留米市に位置する国立高等専門学校。「ものづくり」を重視した実践的な技術者育成を目指し、地域産業との連携も盛ん。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Kurume_National_College_of_Technology_20110503.JPG/640px-Kurume_National_College_of_Technology_20110503.JPG" },
-  { id: "ariake", name: "有明工業高等専門学校", location: "福岡県大牟田市", website: "https://www.ariake-nct.ac.jp/", type: "国立", departments: ["機械創造工学科", "電気電子情報工学科", "創造生産工学科", "建築学科"], description: "福岡県大牟田市に位置する国立高等専門学校。地域産業や社会に貢献できる、実践的技術者の育成を目指す。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Ariake_National_College_of_Technology_20110503.JPG/640px-Ariake_National_College_of_Technology_20110503.JPG" },
-  { id: "kitakyushu", name: "北九州工業高等専門学校", location: "福岡県北九州市小倉南区", website: "https://www.kct.ac.jp/", type: "国立", departments: ["機械工学科", "電気工学科", "電子制御工学科", "情報システム工学科", "物質化学工学科"], description: "福岡県北九州市に位置する国立高等専門学校。「創造性豊かな実践的技術者の育成」を目指し、地域産業や国際社会に貢献できる人材を育成。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Kitakyushu_National_College_of_Technology_20110503.JPG/640px-Kitakyushu_National_College_of_Technology_20110503.JPG" },
-  { id: "sasebo", name: "佐世保工業高等専門学校", location: "長崎県佐世保市", website: "https://www.sasebo.ac.jp/", type: "国立", departments: ["機械工学科", "電気電子工学科", "建設創造工学科", "機械工学専攻", "電気電子工学専攻", "建設創造工学専攻"], description: "長崎県佐世保市に位置する国立高等専門学校。「創造性豊かな実践的技術者の育成」を目指し、地域産業や社会に貢献できる人材を育成。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Sasebo_National_College_of_Technology_20110503.JPG/640px-Sasebo_National_College_of_Technology_20110503.JPG" },
-  { id: "kumamoto", name: "熊本高等専門学校", location: "熊本県（合志市・八代市）", website: "https://kumamoto-nct.ac.jp/", type: "国立", departments: ["機械知能システム工学科", "電気システム工学科", "電子情報システム工学科", "情報通信エレクトロニクス工学科", "建築社会デザイン工学科", "生物化学システム工学科", "生産システム工学専攻", "情報システム工学専攻", "環境建設システム工学専攻", "応用化学システム工学専攻"], description:"熊本キャンパスと八代キャンパスの2キャンパス体制。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/National_Institute_of_Technology%2C_Kumamoto_College_Kumamoto_Campus_Main_Building_20130323.JPG/640px-National_Institute_of_Technology%2C_Kumamoto_College_Kumamoto_Campus_Main_Building_20130323.JPG" },
-  { id: "oita", name: "大分工業高等専門学校", location: "大分県大分市", website: "https://www.oita-ct.ac.jp/", type: "国立", departments: ["機械工学科", "電気電子工学科", "情報工学科", "都市・建築工学科", "応用科学工学科"], description: "大分県大分市に位置する国立高等専門学校。「創造性豊かな実践的技術者の育成」を目指し、地域産業や国際社会に貢献できる人材を育成。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Oita_National_College_of_Technology_20110503.JPG/640px-Oita_National_College_of_Technology_20110503.JPG" },
-  { id: "miyakonojo", name: "都城工業高等専門学校", location: "宮崎県都城市", website: "https://www.miyakonojo-nct.ac.jp/", type: "国立", departments: ["機械工学科", "電気情報工学科", "物質工学科", "建築学科"], description: "宮崎県都城市に位置する国立高等専門学校。「ものづくり」を重視した実践的な技術者育成を目指し、地域産業との連携も盛ん。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Miyakonojo_National_College_of_Technology_20110503.JPG/640px-Miyakonojo_National_College_of_Technology_20110503.JPG" },
-  { id: "kagoshima", name: "鹿児島工業高等専門学校", location: "鹿児島県霧島市", website: "https://www.kagoshima-ct.ac.jp/", type: "国立", departments: ["機械工学科", "電気電子工学科", "電子制御工学科", "情報工学科", "建築学科", "化学工学科"], description: "鹿児島県霧島市に位置する国立高等専門学校。「創造性豊かな実践的技術者の育成」を目指し、地域産業や国際社会に貢献できる人材を育成。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Kagoshima_National_College_of_Technology_20110503.JPG/640px-Kagoshima_National_College_of_Technology_20110503.JPG" },
-  { id: "okinawa", name: "沖縄工業高等専門学校", location: "沖縄県名護市", website: "https://www.okinawa-ct.ac.jp/", type: "国立", departments: ["機械システム工学科", "情報通信システム工学科", "メディア情報工学科", "生物資源工学科", "国際流通学科"], description: "沖縄県名護市に位置する国立高等専門学校。沖縄の地域特性を活かした技術者育成を目指し、国際交流も盛ん。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Okinawa_National_College_of_Technology_20110503.JPG/640px-Okinawa_National_College_of_Technology_20110503.JPG" },
+interface GalleryImage {
+  src: string;
+  alt: string;
+  fileId?: string;
+  uploaderName?: string;
+  credit?: {
+    text: string;
+    url: string;
+  };
+}
 
-  // --- 公立高専 (3校) ---
-  { id: "tokyo_metro_cit", name: "東京都立産業技術高等専門学校", location: "東京都（品川区・荒川区）", website: "https://www.metro-cit.ac.jp/", type: "公立", departments: ["ものづくり工学科", "航空宇宙工学科群", "情報通信工学科群", "社会基盤工学科群", "AI・スマート工学コース"], description: "品川・荒川の2キャンパス体制。幅広い産業分野で活躍できる技術者を育成。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Tokyo_Metropolitan_College_of_Industrial_Technology_Shinagawa_Campus_2018.jpg/640px-Tokyo_Metropolitan_College_of_Industrial_Technology_Shinagawa_Campus_2018.jpg" }, 
-  { id: "osaka_omu_ct", name: "大阪公立大学工業高等専門学校", location: "大阪府寝屋川市", website: "https://www.ct.omu.ac.jp/", type: "公立", departments: ["総合工学システム学科（機械工学コース、電気電子工学コース、環境物質化学コース、都市環境工学コース）"], description: "大阪公立大学グループの一員。旧・大阪府立大学工業高等専門学校。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Osaka_Prefecture_University_College_of_Technology_20090426.JPG/640px-Osaka_Prefecture_University_College_of_Technology_20090426.JPG" },
-  { id: "kobe_city_ct", name: "神戸市立工業高等専門学校", location: "兵庫県神戸市西区", website: "https://www.kobe-kosen.ac.jp/", type: "公立", departments: ["機械工学科", "電気工学科", "電子工学科", "応用化学科", "都市工学科"], description: "神戸研究学園都市に位置。創造教育に力を入れている。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Kobe_City_College_of_Technology_administration_building_20080426.JPG/640px-Kobe_City_College_of_Technology_administration_building_20080426.JPG" },
-
-  // --- 私立高専 (4校) ---
-  { id: "salesio_sp", name: "サレジオ工業高等専門学校", location: "東京都町田市", website: "https://www.salesio-sp.ac.jp/", type: "私立", departments: ["デザイン学科", "電気工学科", "機械電子工学科", "情報工学科"], description: "キリスト教精神に基づく人間教育と専門技術教育。国際交流も盛ん。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Salesian_Polytechnic_2017.jpg/640px-Salesian_Polytechnic_2017.jpg" },
-  { id: "ict_kanazawa", name: "国際高等専門学校", location: "石川県金沢市・白山市", website: "https://www.ict-kanazawa.ac.jp/", type: "私立", departments: ["国際理工学科"], description: "全寮制・英語での授業（一部）。グローバルなエンジニア育成重視。金沢工業大学設立。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/International_College_of_Technology%2C_Kanazawa_2018.jpg/640px-International_College_of_Technology%2C_Kanazawa_2018.jpg" },
-  { id: "kindai_ktc", name: "近畿大学工業高等専門学校", location: "三重県名張市", website: "https://www.ktc.ac.jp/", type: "私立", departments: ["総合システム工学科（ロボティクス、エネルギーメカトロニクス、情報システム、バイオサイエンス、建築デザイン）"], description: "近畿大学の併設校。幅広い分野の技術者を育成。クラブ活動も活発。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Kindai_University_Technical_College_2012.JPG/640px-Kindai_University_Technical_College_2012.JPG" },
-  { id: "kamiyama_ac", name: "神山まるごと高等専門学校", location: "徳島県名西郡神山町", website: "https://kamiyama.ac.jp/", type: "私立", departments: ["デザイン・エンジニアリング学科（仮称）"], description: "地域創生と起業家精神を重視。2023年開校。「モノをつくる力で、コトを起こす人」を育てる。", imageUrl: "https://placehold.jp/600x400.png?text=神山まるごと高専(画像準備中)" },
-  { id: "tokyo_metro_sangyo_hinokawa", name: "東京都立産業技術高等専門学校（品川キャンパス）", location: "東京都品川区", website: "https://www.metro-cit.ac.jp/campus/shinagawa/", type: "公立", departments: ["ものづくり工学科", "情報通信工学科", "航空宇宙工学科"], description: "東京都立の高等専門学校。品川キャンパスと荒川キャンパスがある。旧都立工業高専と旧都立航空高専が母体。実践的な技術者教育を行う。", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Tokyo_Metropolitan_College_of_Technology_Shinagawa_Campus_20120505.JPG/640px-Tokyo_Metropolitan_College_of_Technology_Shinagawa_Campus_20120505.JPG" },
-];
-
-// findKosenById は kosenList を参照するため、kosenList の更新が反映される
 const findKosenById = (id: string): Kosen | undefined => {
-    // kosenListの全データをここで参照する
     return kosenList.find(k => k.id === id);
 };
 
 export default function KosenDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { toast } = useToast();
   const kosenId = params?.id as string;
   const kosen = findKosenById(kosenId);
-  const [user, setUser] = useState<{ username: string; email: string; } | null>(null);
+
+  const [user, setUser] = useState<{ username: string; email: string; role?: 'admin' | 'user' } | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
+  
   const [approvedImages, setApprovedImages] = useState<ApprovedImage[]>([]);
   const [loadingImages, setLoadingImages] = useState(true);
 
+  const [mainImageIndex, setMainImageIndex] = useState(0);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editableKosen, setEditableKosen] = useState<Kosen | null>(null);
+
+  const galleryImages: GalleryImage[] = useMemo(() => {
+    const images: GalleryImage[] = [];
+    if (kosen?.imageUrl) {
+      images.push({
+        src: kosen.imageUrl,
+        alt: `${kosen.name} 公式イメージ画像`,
+        uploaderName: kosen.imageCreditText ? undefined : '公式',
+        credit: kosen.imageCreditText && kosen.imageCreditUrl 
+          ? { text: kosen.imageCreditText, url: kosen.imageCreditUrl } 
+          : undefined,
+      });
+    }
+    approvedImages.forEach(img => {
+      images.push({
+        src: `/api/images/${img.fileId}`,
+        alt: `${kosen?.name}の投稿画像`,
+        fileId: img.fileId,
+        uploaderName: img.uploader?.username || '匿名ユーザー',
+      });
+    });
+    return images;
+  }, [kosen, approvedImages]);
+
   useEffect(() => {
+    setMainImageIndex(0);
+
     const fetchUser = async () => {
+      setLoadingUser(true);
       try {
         const res = await fetch('/api/auth/me', { credentials: 'include' });
         if (res.ok) {
@@ -142,6 +107,7 @@ export default function KosenDetailPage() {
 
     const fetchApprovedImages = async () => {
       if (!kosenId) return;
+      setLoadingImages(true);
       try {
         const res = await fetch(`/api/kosen/${kosenId}/images`);
         if (res.ok) {
@@ -158,6 +124,110 @@ export default function KosenDetailPage() {
     fetchUser();
     fetchApprovedImages();
   }, [kosenId]);
+
+  useEffect(() => {
+    if (kosen) {
+      setEditableKosen(kosen);
+    }
+  }, [kosen]);
+
+  const handleUpdateKosen = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editableKosen) return;
+
+    try {
+      const res = await fetch(`/api/kosen/${kosenId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editableKosen),
+      });
+
+      if (res.ok) {
+        toast({
+          title: '成功',
+          description: '高専情報が更新されました。（現在は静的データのため永続化されません）',
+        });
+        setIsEditModalOpen(false);
+      } else {
+        const errorData = await res.json();
+        throw new Error(errorData.message || '更新に失敗しました。');
+      }
+    } catch (error: any) {
+      toast({
+        title: 'エラー',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeleteImage = async (fileId: string) => {
+    if (!user || user.role !== 'admin') {
+      toast({
+        title: '権限がありません',
+        description: '画像の削除は管理者のみ可能です。',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (confirm('本当にこの画像を削除しますか？この操作は取り消せません。')) {
+        try {
+        const res = await fetch(`/api/images/${fileId}`, {
+            method: 'DELETE',
+        });
+
+        if (res.ok) {
+            toast({
+            title: '成功',
+            description: '画像が正常に削除されました。',
+            });
+            setApprovedImages(prev => prev.filter(img => img.fileId !== fileId));
+            setIsPreviewOpen(false);
+            setSelectedImage(null);
+            setMainImageIndex(0);
+        } else {
+            const errorData = await res.json();
+            throw new Error(errorData.message || '削除に失敗しました。');
+        }
+        } catch (error: any) {
+        toast({
+            title: 'エラー',
+            description: error.message,
+            variant: 'destructive',
+        });
+        }
+    }
+  };
+
+  const handlePreviousImage = () => {
+    setMainImageIndex((prevIndex) => (prevIndex - 1 + galleryImages.length) % galleryImages.length);
+  };
+
+  const handleNextImage = () => {
+    setMainImageIndex((prevIndex) => (prevIndex + 1) % galleryImages.length);
+  };
+
+  const handleModalNext = () => {
+    const currentIndex = galleryImages.findIndex(img => img.src === selectedImage?.src);
+    if (currentIndex > -1) {
+      const nextIndex = (currentIndex + 1) % galleryImages.length;
+      setSelectedImage(galleryImages[nextIndex]);
+    }
+  };
+
+  const handleModalPrevious = () => {
+    const currentIndex = galleryImages.findIndex(img => img.src === selectedImage?.src);
+    if (currentIndex > -1) {
+      const prevIndex = (currentIndex - 1 + galleryImages.length) % galleryImages.length;
+      setSelectedImage(galleryImages[prevIndex]);
+    }
+  };
+
+  const openPreview = (image: GalleryImage) => {
+    setSelectedImage(image);
+    setIsPreviewOpen(true);
+  };
 
   if (!kosen) {
     return (
@@ -177,229 +247,273 @@ export default function KosenDetailPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-muted/40">
-      <main className="flex-1 py-10 md:py-12 lg:py-16">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="grid md:grid-cols-5 gap-8 lg:gap-12">
-            <div className="md:col-span-2">
-              <Card className="overflow-hidden elegant-card group">
-                {kosen.imageUrl ? (
-                  <div className="relative w-full aspect-[4/3]">
-                    <Image
-                      src={kosen.imageUrl}
-                      alt={`${kosen.name} イメージ画像`}
-                      layout="fill"
-                      objectFit="cover"
-                      className="transition-transform duration-300 ease-in-out group-hover:scale-105"
-                    />
-                  </div>
-                ) : (
-                  <div className="aspect-[4/3] bg-muted flex flex-col items-center justify-center">
-                    <ImageOff className="h-16 w-16 text-muted-foreground mb-2" />
-                    <p className="text-muted-foreground">画像はありません</p>
-                  </div>
-                )}
-                <CardHeader className="p-4">
-                  <div className="flex justify-between items-start mb-1">
-                    <CardTitle className="text-xl font-semibold">{kosen.name}</CardTitle>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${kosen.type === '国立' ? 'bg-blue-100 text-blue-800' : kosen.type === '公立' ? 'bg-green-100 text-green-800' : 'bg-purple-100 text-purple-800'}`}>
-                      <ShieldCheck className="mr-1 h-3.5 w-3.5" /> 
-                      {kosen.type}
-                    </span>
-                  </div>
-                  <CardDescription className="flex items-center pt-1 text-sm">
-                    <MapPin className="mr-1.5 h-4 w-4 text-muted-foreground" />
-                    {kosen.location}
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </div>
-
-            <div className="md:col-span-3">
-              <Tabs defaultValue="overview" className="w-full">
-                <TabsList className="grid w-full grid-cols-4 mb-4 elegant-tabs-list">
-                  <TabsTrigger value="overview" className="elegant-tab-trigger">概要・特色</TabsTrigger>
-                  <TabsTrigger value="departments" className="elegant-tab-trigger">設置学科</TabsTrigger>
-                  <TabsTrigger value="gallery" className="elegant-tab-trigger">ギャラリー</TabsTrigger>
-                  <TabsTrigger value="reviews" className="elegant-tab-trigger">声・投稿</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="overview">
-                  <Card className="elegant-card">
-                    <CardHeader>
-                      <CardTitle className="text-xl font-semibold flex items-center">
-                        <Info className="mr-2 h-5 w-5" /> {kosen.name} 概要・特色
-                      </CardTitle>
-                    </CardHeader>
-                    {kosen.description && (
-                      <CardContent>
-                        <p className="text-base text-muted-foreground whitespace-pre-wrap mb-4">{kosen.description}</p>
-                      </CardContent>
-                    )}
-                    <CardFooter className="flex justify-end">
-                      <Button asChild size="sm" variant="outline" className="elegant-button-outline">
-                        <Link href={kosen.website} target="_blank" rel="noopener noreferrer">
-                          公式サイトへ
-                          <ExternalLink className="ml-1.5 h-4 w-4" />
-                        </Link>
+    <>
+      <div className="flex min-h-screen flex-col bg-muted/40">
+        <main className="flex-1 py-10 md:py-12 lg:py-16">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="grid md:grid-cols-5 gap-8 lg:gap-12">
+              <div className="md:col-span-2">
+                <Card className="overflow-hidden elegant-card group">
+                  {galleryImages.length > 0 ? (
+                    <div className="relative w-full aspect-[4/3]">
+                      <Image
+                        key={galleryImages[mainImageIndex].src}
+                        src={galleryImages[mainImageIndex].src}
+                        alt={galleryImages[mainImageIndex].alt}
+                        fill
+                        className="object-cover transition-transform duration-300 ease-in-out group-hover:scale-105 cursor-pointer"
+                        onClick={() => openPreview(galleryImages[mainImageIndex])}
+                      />
+                      {galleryImages.length > 1 && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute left-2 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-black/30 hover:bg-black/50 text-white"
+                            onClick={handlePreviousImage}
+                          >
+                            <ChevronLeft className="h-6 w-6" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-black/30 hover:bg-black/50 text-white"
+                            onClick={handleNextImage}
+                          >
+                            <ChevronRight className="h-6 w-6" />
+                          </Button>
+                        </>
+                      )}
+                       <div className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+                        {mainImageIndex + 1} / {galleryImages.length}
+                      </div>
+                      {user?.role === 'admin' && galleryImages[mainImageIndex].fileId && (
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-2 right-2 h-9 w-9 opacity-80 hover:opacity-100"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if(galleryImages[mainImageIndex].fileId) {
+                                handleDeleteImage(galleryImages[mainImageIndex].fileId!);
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-5 w-5" />
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="aspect-[4/3] bg-muted flex flex-col items-center justify-center">
+                      <ImageOff className="h-16 w-16 text-muted-foreground mb-2" />
+                      <p className="text-muted-foreground">画像はありません</p>
+                    </div>
+                  )}
+                  <CardHeader className="p-4">
+                    <div className="flex justify-between items-start mb-1">
+                      <CardTitle className="text-xl font-semibold">{kosen.name}</CardTitle>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${kosen.type === '国立' ? 'bg-blue-100 text-blue-800' : kosen.type === '公立' ? 'bg-green-100 text-green-800' : 'bg-purple-100 text-purple-800'}`}>
+                        <ShieldCheck className="mr-1 h-3.5 w-3.5" /> 
+                        {kosen.type}
+                      </span>
+                    </div>
+                    <CardDescription className="flex items-center pt-1 text-sm">
+                      <MapPin className="mr-1.5 h-4 w-4 text-muted-foreground" />
+                      {kosen.location}
+                    </CardDescription>
+                  </CardHeader>
+                  {user?.role === 'admin' && (
+                    <CardFooter className="p-4 bg-muted/50">
+                      <Button
+                        className="w-full"
+                        variant="outline"
+                        onClick={() => {
+                          setEditableKosen(kosen);
+                          setIsEditModalOpen(true);
+                        }}
+                      >
+                        <Edit className="mr-2 h-4 w-4" />
+                        高専情報を編集する
                       </Button>
                     </CardFooter>
-                  </Card>
-                </TabsContent>
+                  )}
+                </Card>
+              </div>
 
-                <TabsContent value="departments">
-                  <Card className="elegant-card">
-                    <CardHeader>
-                      <CardTitle className="text-xl font-semibold flex items-center">
-                        <BookOpen className="mr-2 h-5 w-5" /> 主な設置学科
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {kosen.departments && kosen.departments.length > 0 ? (
-                        <ul className="list-disc list-inside space-y-1 pl-2">
-                          {kosen.departments.map((dept, index) => (
-                            <li key={index} className="text-base text-muted-foreground">{dept}</li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="text-base text-muted-foreground italic">設置学科の情報は現在ありません。</p>
-                      )}
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="gallery">
-                  <Card className="elegant-card">
-                    <CardHeader>
-                      <CardTitle className="text-xl font-semibold flex items-center">
-                        <GalleryHorizontal className="mr-2 h-5 w-5" /> ギャラリー
-                      </CardTitle>
-                      <CardDescription>ユーザーから投稿された写真</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      {loadingImages ? (
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                          {[...Array(6)].map((_, i) => (
-                            <Skeleton key={i} className="aspect-video w-full" />
-                          ))}
-                        </div>
-                      ) : approvedImages.length > 0 ? (
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                          {approvedImages.map((image) => (
-                            <a key={image._id} href={`/api/images/${image.fileId}`} target="_blank" rel="noopener noreferrer">
-                              <div className="relative aspect-video w-full rounded-md overflow-hidden border group">
-                                <Image
-                                  src={`/api/images/${image.fileId}`}
-                                  alt={`${kosen.name}の投稿画像`}
-                                  fill
-                                  className="object-cover transition-transform duration-300 group-hover:scale-105"
-                                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                                />
-                                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                              </div>
+              <div className="md:col-span-3">
+                 <Tabs defaultValue="overview" className="w-full">
+                  <TabsList className="grid w-full grid-cols-4 mb-4 elegant-tabs-list">
+                    <TabsTrigger value="overview"><Info className="mr-1.5 h-4 w-4" />概要</TabsTrigger>
+                    <TabsTrigger value="departments"><BookOpen className="mr-1.5 h-4 w-4" />学科情報</TabsTrigger>
+                    <TabsTrigger value="gallery"><GalleryHorizontal className="mr-1.5 h-4 w-4" />ギャラリー</TabsTrigger>
+                    <TabsTrigger value="qna"><MessageSquare className="mr-1.5 h-4 w-4" />Q&A</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="overview">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>高専の概要</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <p className="text-muted-foreground">{kosen.description}</p>
+                        <div className="flex justify-between items-center">
+                            <a href={kosen.website} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-primary hover:underline flex items-center">
+                                <ExternalLink className="mr-1 h-4 w-4" />
+                                公式サイトを見る
                             </a>
-                          ))}
                         </div>
-                      ) : (
-                        <div className="text-center py-10 border-2 border-dashed rounded-lg">
-                          <ImageOff className="mx-auto h-10 w-10 text-muted-foreground" />
-                          <p className="mt-4 text-muted-foreground">まだ承認された画像はありません。</p>
-                          <p className="text-sm text-muted-foreground">最初の画像を投稿してみませんか？ (「声・投稿」タブから)</p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="reviews">
-                  <Card className="elegant-card">
-                    <CardHeader>
-                      <CardTitle className="text-xl font-semibold flex items-center">
-                        <Users className="mr-2 h-5 w-5" /> 在校生・卒業生の声
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-6">
-                        <div>
-                          <h4 className="text-lg font-semibold mb-2 flex items-center">
-                            <BookOpen className="mr-2 h-5 w-5 text-primary" /> カリキュラムの充実度
-                          </h4>
-                          <p className="text-base text-muted-foreground italic">
-                            (ここに収集されたカリキュラムに関するレビューや評価が表示されます)
-                          </p>
-                        </div>
-                        <div>
-                          <h4 className="text-lg font-semibold mb-2 flex items-center">
-                            <MessageSquare className="mr-2 h-5 w-5 text-primary" /> 学生生活のリアル
-                          </h4>
-                          <p className="text-base text-muted-foreground italic">
-                            (ここに収集された学生生活に関するレビューや体験談が表示されます)
-                          </p>
-                        </div>
-                        <div>
-                          <h4 className="text-lg font-semibold mb-2 flex items-center">
-                            <BarChart className="mr-2 h-5 w-5 text-primary" /> キャリア・進路サポート
-                          </h4>
-                          <p className="text-base text-muted-foreground italic">
-                            (ここに収集された進路に関する情報やアドバイスが表示されます)
-                          </p>
-                        </div>
-                        <div>
-                          <h4 className="text-lg font-semibold mb-2 flex items-center">
-                            <BarChart className="mr-2 h-5 w-5 text-primary" /> 入試に必要な学力レベル
-                          </h4>
-                          <p className="text-base text-muted-foreground italic">
-                            (ここに収集された入試の難易度に関する情報が表示されます)
-                          </p>
-                        </div>
-                        <div className="text-center pt-4">
-                          <Button asChild variant="outline">
-                            <Link href={`/collect-info?kosenId=${kosen.id}&kosenName=${encodeURIComponent(kosen.name)}`}>
-                              この高専の情報を投稿する
-                            </Link>
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  {/* Image Upload Card */}
-                  <Card className="elegant-card mt-6">
-                    <CardHeader>
-                      <CardTitle className="text-xl font-semibold flex items-center">
-                        <Camera className="mr-2 h-5 w-5" /> 画像を投稿して共有する
-                      </CardTitle>
-                       <CardDescription>この高専の写真や動画を投稿して、みんなに魅力を伝えましょう。</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      {loadingUser ? (
-                        <div className="flex items-center space-x-4">
-                          <Skeleton className="h-12 w-12 rounded-full" />
-                          <div className="space-y-2">
-                            <Skeleton className="h-4 w-[250px]" />
-                            <Skeleton className="h-4 w-[200px]" />
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                  <TabsContent value="departments">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>設置学科</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="list-disc list-inside space-y-2">
+                            {kosen.departments?.map((dept, index) => <li key={index}>{dept}</li>)}
+                        </ul>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                   <TabsContent value="gallery">
+                    <Card>
+                       <CardHeader>
+                        <CardTitle>ギャラリー</CardTitle>
+                        <CardDescription>
+                          この高専の公式画像や、ユーザーから投稿された写真を見ることができます。
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        {loadingImages ? (
+                          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Skeleton key={i} className="aspect-square w-full" />
+                            ))}
                           </div>
-                        </div>
-                      ) : user ? (
-                        <ImageUploadForm kosenId={kosen.id} />
-                      ) : (
-                        <div className="text-center text-muted-foreground p-4 border-2 border-dashed rounded-lg">
-                           <LogIn className="mx-auto h-8 w-8 mb-2" />
-                          <p className="font-semibold mb-2">ログインが必要です</p>
-                          <p className="text-sm mb-4">画像を投稿するには、ログインまたは新規登録をしてください。</p>
-                          <Button asChild>
-                            <Link href="/login">ログインページへ</Link>
-                          </Button>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
+                        ) : galleryImages.length > 0 ? (
+                          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                            {galleryImages.map((img, index) => (
+                              <div
+                                key={index}
+                                className="relative aspect-square cursor-pointer group"
+                                onClick={() => openPreview(img)}
+                              >
+                                <Image
+                                  src={img.src}
+                                  alt={img.alt}
+                                  fill
+                                  className="object-cover rounded-md transition-opacity group-hover:opacity-75"
+                                />
+                                {user?.role === 'admin' && img.fileId && (
+                                  <Button
+                                    variant="destructive"
+                                    size="icon"
+                                    className="absolute top-1 right-1 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteImage(img.fileId!);
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <ImageOff className="mx-auto h-12 w-12 mb-2" />
+                            <p>まだ画像がありません。</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                    <Card className="mt-6">
+                      <CardHeader>
+                        <CardTitle>画像を投稿して共有する</CardTitle>
+                        <CardDescription>この高専の写真や動画を投稿して、みんなに魅力を伝えましょう。</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        {loadingUser ? <Skeleton className="h-24 w-full" /> : <ImageUploadForm kosenId={kosen.id} user={user} />}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                  <TabsContent value="qna">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Q&A</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p>Q&A機能は現在準備中です。</p>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
+              </div>
             </div>
           </div>
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+      {selectedImage && (
+        <ImagePreviewModal
+          isOpen={isPreviewOpen}
+          onClose={() => setIsPreviewOpen(false)}
+          image={selectedImage}
+          onDelete={user?.role === 'admin' && selectedImage.fileId ? handleDeleteImage : undefined}
+          totalImages={galleryImages.length}
+          currentImageIndex={galleryImages.findIndex(img => img.src === selectedImage.src)}
+          onNext={handleModalNext}
+          onPrevious={handleModalPrevious}
+        />
+      )}
+
+      {editableKosen && (
+        <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>高専情報の編集</DialogTitle>
+              <DialogDescription>
+                {kosen.name}の情報を編集します。変更は現在の表示にのみ反映されます。
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleUpdateKosen}>
+              <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto px-2">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="name" className="text-right">学校名</Label>
+                  <Input id="name" value={editableKosen.name} onChange={(e) => setEditableKosen({...editableKosen, name: e.target.value})} className="col-span-3" />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="location" className="text-right">所在地</Label>
+                  <Input id="location" value={editableKosen.location} onChange={(e) => setEditableKosen({...editableKosen, location: e.target.value})} className="col-span-3" />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="website" className="text-right">ウェブサイト</Label>
+                  <Input id="website" value={editableKosen.website} onChange={(e) => setEditableKosen({...editableKosen, website: e.target.value})} className="col-span-3" />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="description" className="text-right">説明</Label>
+                  <Textarea id="description" value={editableKosen.description || ''} onChange={(e) => setEditableKosen({...editableKosen, description: e.target.value})} className="col-span-3" rows={5} />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="imageUrl" className="text-right">画像URL</Label>
+                  <Input id="imageUrl" value={editableKosen.imageUrl || ''} onChange={(e) => setEditableKosen({...editableKosen, imageUrl: e.target.value})} className="col-span-3" />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="departments" className="text-right">学科</Label>
+                  <Textarea id="departments" value={editableKosen.departments?.join(', ') || ''} onChange={(e) => setEditableKosen({...editableKosen, departments: e.target.value.split(',').map(s => s.trim())})} className="col-span-3" rows={3} />
+                </div>
+              </div>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button type="button" variant="outline">キャンセル</Button>
+                </DialogClose>
+                <Button type="submit">更新</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
-} 
+}

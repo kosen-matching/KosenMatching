@@ -5,7 +5,12 @@ import jwt from 'jsonwebtoken';
 import { serialize } from 'cookie';
 import bcrypt from 'bcrypt';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET!;
+
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET環境変数が設定されていません');
+}
+
 const MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
 export async function POST(req: Request) {
@@ -40,7 +45,7 @@ export async function POST(req: Request) {
 
     const cookie = serialize('token', token, {
       httpOnly: true,
-      secure: false,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: MAX_AGE,
       path: '/',

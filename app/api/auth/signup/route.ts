@@ -4,7 +4,11 @@ import bcrypt from 'bcrypt';
 import { getDb } from '@/lib/db';
 import { User, getUsersCollection } from '@/models/User';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET!;
+
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET環境変数が設定されていません');
+}
 
 export async function POST(req: Request) {
   try {
@@ -73,7 +77,7 @@ export async function POST(req: Request) {
     );
     response.cookies.set('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV !== 'development',
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 60 * 60 * 24, // 1 day in seconds
       path: '/',
