@@ -7,8 +7,16 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true,
-    domains: ['upload.wikimedia.org', 'placehold.jp'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'upload.wikimedia.org',
+      },
+      {
+        protocol: 'https',
+        hostname: 'placehold.jp',
+      },
+    ],
   },
   experimental: {
     allowedDevOrigins: ["http://match-test"],

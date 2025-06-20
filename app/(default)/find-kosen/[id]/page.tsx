@@ -12,7 +12,7 @@ import { ImageUploadForm } from '@/components/kosen-image-upload-form';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ImagePreviewModal } from '@/components/image-preview-modal';
 import { useToast } from '@/components/ui/use-toast';
-import { kosenList } from '@/lib/kosen-data';
+import { kosenList as kosenData } from '@/lib/kosen-data';
 import { Kosen } from '@/types/kosen';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -39,7 +39,7 @@ interface GalleryImage {
 }
 
 const findKosenById = (id: string): Kosen | undefined => {
-    return kosenList.find(k => k.id === id);
+    return kosenData.find((k: Kosen) => k.id === id);
 };
 
 export default function KosenDetailPage() {

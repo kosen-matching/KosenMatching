@@ -13,6 +13,18 @@ if (!JWT_SECRET) {
 
 const MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
+interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+function validateLoginRequest(body: any): body is LoginRequest {
+  return typeof body.email === 'string' && 
+         typeof body.password === 'string' &&
+         body.email.includes('@') &&
+         body.password.length >= 8;
+}
+
 export async function POST(req: Request) {
   try {
     const db = await getDb();

@@ -19,6 +19,9 @@ const config = {
       },
     },
     extend: {
+      screens: {
+        'sp': '854.4px',
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -53,14 +56,12 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // 落ち着いたカラーテーマ用の色
-        theme: {
-          primary: "#3B5BA9", // 落ち着いた青
-          secondary: "#6D8BC7", // 薄い青
-          accent: "#D9A566", // 落ち着いた金色
-          muted: "#F5F7FA", // 薄いグレー
-          dark: "#1A1A1A", // 濃いグレー/黒
-        },
+        // ポップなカラーテーマ用の色
+        "theme-primary": "#007BFF", // 鮮やかな青
+        "theme-secondary": "#FFC107", // アンバー/イエロー
+        "theme-accent": "#F86F03", // 元気なオレンジ
+        "theme-muted": "#F5F7FA", // 薄いグレー
+        "theme-dark": "#1A1A1A", // 濃いグレー/黒
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -86,7 +87,10 @@ const config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    require("@tailwindcss/typography")
+  ],
 } satisfies Config
 
 export default config

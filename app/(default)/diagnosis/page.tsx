@@ -2,7 +2,8 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -16,7 +17,6 @@ import { ArrowRight, Home, BookOpen, Briefcase, Brain, MapPin, Users, Sparkles, 
 import Link from "next/link"
 import Image from "next/image"
 import { Progress } from "@/components/ui/progress"
-import Header from "@/components/header"
 
 // 型定義
 interface QuestionBase {
@@ -136,53 +136,61 @@ const freeformQuestionData: TextareaQuestion = {
     "例：ロボット開発に興味があり、将来は自分でロボットを設計したいです。プログラミングも好きで、特に制御系のプログラムに関心があります。チームでものづくりをするのが好きです。",
 }
 
-// 診断結果のサンプルデータ
-const sampleResults = [
-  {
-    id: 1,
-    name: "東京高専",
-    department: "情報工学科",
-    matchRate: 95,
-    location: "東京都八王子市",
-    features: ["情報系に強い", "就職率98%", "都心からアクセス良好"],
-    description:
-      "あなたの情報技術への興味と論理的思考力が、東京高専の情報工学科と高いマッチ率を示しています。プログラミングやシステム開発に関する実践的なカリキュラムが充実しており、将来のIT業界でのキャリアに最適です。",
-    image: "/placeholder.svg?height=200&width=300",
-    color: "theme-primary",
-  },
-  {
-    id: 2,
-    name: "仙台高専",
-    department: "知能エレクトロニクス工学科",
-    matchRate: 87,
-    location: "宮城県仙台市",
-    features: ["電子工学に強み", "研究設備充実", "寮完備"],
-    description:
-      "電気・電子分野への興味と分析的な思考スタイルが、仙台高専の知能エレクトロニクス工学科と高いマッチ率を示しています。電子回路設計やAI技術の応用など、最先端の技術を学ぶ環境が整っています。",
-    image: "/placeholder.svg?height=200&width=300",
-    color: "theme-secondary",
-  },
-  {
-    id: 3,
-    name: "大阪高専",
-    department: "機械工学科",
-    matchRate: 82,
-    location: "大阪府寝屋川市",
-    features: ["実習設備が充実", "ロボコン実績多数", "企業連携が強い"],
-    description:
-      "機械・ロボットへの興味と実践的な作業スタイルが、大阪高専の機械工学科と高いマッチ率を示しています。ものづくりを通じた実践的な学びが特徴で、将来のエンジニアとしての基礎力を養うことができます。",
-    image: "/placeholder.svg?height=200&width=300",
-    color: "theme-accent",
-  },
-]
+// 診断結果の型定義 (APIのレスポンスに合わせる)
+interface DiagnosisResult {
+  id: string;
+  name: string;
+  location: string;
+  departments?: string[];
+  description?: string;
+  imageUrl?: string;
+  matchRate: number;
+  matchReason: string;
+}
 
 export default function DiagnosisPage() {
   const [answers, setAnswers] = useState<Record<string, any>>({})
   const [freeformText, setFreeformText] = useState("")
   const [showResults, setShowResults] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [results, setResults] = useState<DiagnosisResult[]>([])
+  const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<string>("structured")
   const [currentStep, setCurrentStep] = useState(0)
+  const [analyzingStep, setAnalyzingStep] = useState(0)
+  const [progress, setProgress] = useState(0)
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout
+    let progressInterval: NodeJS.Timeout
+
+    if (isAnalyzing) {
+      // アイコン切り替え用タイマー
+      interval = setInterval(() => {
+        setAnalyzingStep(prev => prev + 1)
+      }, 500)
+
+      // プログレスバー用タイマー
+      setProgress(10)
+      progressInterval = setInterval(() => {
+        setProgress(p => {
+          if (p >= 90) {
+            return p
+          }
+          return p + Math.random() * 10
+        })
+      }, 300)
+
+    } else {
+      setAnalyzingStep(0)
+      setProgress(0)
+    }
+
+    return () => {
+      clearInterval(interval)
+      clearInterval(progressInterval)
+    }
+  }, [isAnalyzing])
 
   const structuredQuestionKeys = Object.keys(questionsData) as (keyof QuestionsData)[];
 
@@ -209,18 +217,44 @@ export default function DiagnosisPage() {
     setFreeformText(e.target.value)
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setIsAnalyzing(true)
-    setTimeout(() => {
-      setIsAnalyzing(false)
+    setError(null)
+
+    const payload = {
+      answers,
+      freeformText,
+    }
+
+    try {
+      const response = await fetch('/api/diagnosis', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        throw new Error('診断に失敗しました。しばらくしてからもう一度お試しください。')
+      }
+
+      const data = await response.json()
+      setResults(data)
       setShowResults(true)
-    }, 2000)
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setIsAnalyzing(false)
+    }
   }
 
   const handleRestart = () => {
     setAnswers({})
     setFreeformText("")
     setShowResults(false)
+    setResults([])
+    setError(null)
     setActiveTab("structured")
     setCurrentStep(0)
   }
@@ -236,71 +270,78 @@ export default function DiagnosisPage() {
   const renderStructuredQuestions = () => {
     return (
       <div className="space-y-10">
-        {(Object.entries(questionsData) as [keyof QuestionsData, RadioQuestion | SliderQuestion][]).map(([id, question]) => {
+        {(Object.entries(questionsData) as [keyof QuestionsData, RadioQuestion | SliderQuestion][]).map(([id, question], index) => {
           return (
-            <Card key={id} className="shadow-lg border-gray-200 rounded-xl overflow-hidden">
-              <CardHeader className="bg-gray-50 p-6">
-                <div className="flex items-center gap-3">
-                  {id === "interests" && <BookOpen className="h-6 w-6 text-theme-primary" />}
-                  {id === "subjects" && <Brain className="h-6 w-6 text-theme-secondary" />}
-                  {id === "future" && <Briefcase className="h-6 w-6 text-theme-accent" />}
-                  {id === "personality" && <Users className="h-6 w-6 text-theme-primary" />}
-                  {id === "environment" && <MapPin className="h-6 w-6 text-theme-secondary" />}
-                  <div>
-                    <CardTitle className="text-xl font-semibold text-gray-800">{question.title}</CardTitle>
-                    {question.description && <CardDescription className="text-sm text-gray-600 mt-1">{question.description}</CardDescription>}
+            <motion.div
+              key={id}
+              initial={{ opacity: 0, y: 50, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.5, delay: index * 0.1, ease: "easeOut" }}
+            >
+              <Card className="shadow-lg border-gray-200 rounded-xl overflow-hidden">
+                <CardHeader className="bg-gray-50 p-6">
+                  <div className="flex items-center gap-3">
+                    {id === "interests" && <BookOpen className="h-6 w-6 text-theme-primary" />}
+                    {id === "subjects" && <Brain className="h-6 w-6 text-theme-secondary" />}
+                    {id === "future" && <Briefcase className="h-6 w-6 text-theme-accent" />}
+                    {id === "personality" && <Users className="h-6 w-6 text-theme-primary" />}
+                    {id === "environment" && <MapPin className="h-6 w-6 text-theme-secondary" />}
+                    <div>
+                      <CardTitle className="text-xl font-semibold text-gray-800">{question.title}</CardTitle>
+                      {question.description && <CardDescription className="text-sm text-gray-600 mt-1">{question.description}</CardDescription>}
+                    </div>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6 space-y-6">
-                {question.type === "radio" && (
-                  <RadioGroup
-                    value={answers[id] || ""}
-                    onValueChange={(value) => handleRadioChange(id, value)}
-                    className="grid grid-cols-1 md:grid-cols-2 gap-4"
-                  >
-                    {question.options.map((option) => (
-                      <Label
-                        key={option.id}
-                        htmlFor={`${id}-${option.id}`}
-                        className={`flex items-center space-x-3 rounded-lg border p-4 cursor-pointer transition-all hover:border-theme-primary/80 ${answers[id] === option.id ? "border-theme-primary ring-2 ring-theme-primary/50 bg-theme-primary/5" : "border-gray-300"}`}
-                      >
-                        <RadioGroupItem value={option.id} id={`${id}-${option.id}`} className="h-5 w-5 border-gray-400 text-theme-primary focus:ring-theme-primary/50" />
-                        <span className="font-medium text-gray-700">{option.label}</span>
-                      </Label>
-                    ))}
-                  </RadioGroup>
-                )}
+                </CardHeader>
+                <CardContent className="p-6 space-y-6">
+                  {question.type === "radio" && (
+                    <RadioGroup
+                      value={answers[id] || ""}
+                      onValueChange={(value) => handleRadioChange(id, value)}
+                      className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                    >
+                      {question.options.map((option) => (
+                        <Label
+                          key={option.id}
+                          htmlFor={`${id}-${option.id}`}
+                          className={`flex items-center space-x-3 rounded-lg border p-4 cursor-pointer transition-all hover:border-theme-primary/80 ${answers[id] === option.id ? "border-theme-primary ring-2 ring-theme-primary/50 bg-theme-primary/5" : "border-gray-300"}`}
+                        >
+                          <RadioGroupItem value={option.id} id={`${id}-${option.id}`} className="h-5 w-5 border-gray-400 text-theme-primary focus:ring-theme-primary/50" />
+                          <span className="font-medium text-gray-700">{option.label}</span>
+                        </Label>
+                      ))}
+                    </RadioGroup>
+                  )}
 
-                {question.type === "slider" && (
-                  <div className="space-y-6">
-                    {question.sliders.map((slider) => (
-                      <div key={slider.id} className="space-y-3">
-                        <div className="flex justify-between items-center">
-                          <Label htmlFor={slider.id} className="text-base font-medium text-gray-700">{slider.label}</Label>
-                          <span className="text-sm font-semibold text-theme-primary bg-theme-primary/10 px-2 py-1 rounded-md">
-                            {answers[id]?.[slider.id] || slider.defaultValue}%
-                          </span>
+                  {question.type === "slider" && (
+                    <div className="space-y-6">
+                      {question.sliders.map((slider) => (
+                        <div key={slider.id} className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <Label htmlFor={slider.id} className="text-base font-medium text-gray-700">{slider.label}</Label>
+                            <span className="text-sm font-semibold text-theme-primary bg-theme-primary/10 px-2 py-1 rounded-md">
+                              {answers[id]?.[slider.id] || slider.defaultValue}%
+                            </span>
+                          </div>
+                          <Slider
+                            id={slider.id}
+                            defaultValue={[slider.defaultValue]}
+                            max={100}
+                            step={1}
+                            onValueChange={(value) => handleSliderChange(id, slider.id, value)}
+                            className="[&>span:first-child]:h-2 [&>span:first-child]:bg-gray-200 [&_[role=slider]]:bg-theme-primary [&_[role=slider]]:h-5 [&_[role=slider]]:w-5 [&_[role=slider]]:border-2 [&_[role=slider]]:border-white [&_[role=slider]]:shadow-md [&_[role=slider]]:focus-visible:ring-2 [&_[role=slider]]:focus-visible:ring-theme-primary/50"
+                          />
+                          <div className="flex justify-between text-xs text-gray-500">
+                            <span>あまり重視しない</span>
+                            <span>非常に重視する</span>
+                          </div>
                         </div>
-                        <Slider
-                          id={slider.id}
-                          defaultValue={[slider.defaultValue]}
-                          max={100}
-                          step={1}
-                          onValueChange={(value) => handleSliderChange(id, slider.id, value)}
-                          className="[&>span:first-child]:h-2 [&>span:first-child]:bg-gray-200 [&_[role=slider]]:bg-theme-primary [&_[role=slider]]:h-5 [&_[role=slider]]:w-5 [&_[role=slider]]:border-2 [&_[role=slider]]:border-white [&_[role=slider]]:shadow-md [&_[role=slider]]:focus-visible:ring-2 [&_[role=slider]]:focus-visible:ring-theme-primary/50"
-                        />
-                        <div className="flex justify-between text-xs text-gray-500">
-                          <span>あまり重視しない</span>
-                          <span>非常に重視する</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-              {id !== "environment" && <Separator className="my-0" />}
-            </Card>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+                {id !== "environment" && <Separator className="my-0" />}
+              </Card>
+            </motion.div>
           )
         })}
       </div>
@@ -335,25 +376,25 @@ export default function DiagnosisPage() {
   }
 
   const renderResults = () => {
-    let recommendedSchool = sampleResults[0]
-    if (answers.interests === "information" || answers.subjects === "math") {
-      recommendedSchool = sampleResults.find(school => school.name.includes("東京")) || sampleResults[0]
-    } else if (answers.interests === "electrical" || answers.subjects === "physics") {
-      recommendedSchool = sampleResults.find(school => school.name.includes("仙台")) || sampleResults[1]
-    } else if (answers.interests === "mechanical" || answers.personality === "practical") {
-      recommendedSchool = sampleResults.find(school => school.name.includes("大阪")) || sampleResults[2]
+    if (error) {
+      return (
+        <div className="text-center space-y-4 p-8 bg-red-50 border border-red-200 rounded-lg">
+          <h2 className="text-2xl font-bold text-red-700">エラーが発生しました</h2>
+          <p className="text-red-600">{error}</p>
+          <Button onClick={handleRestart}>もう一度試す</Button>
+        </div>
+      )
     }
 
-    if (freeformText.includes("ロボット") && questionsData.interests) {
-      const mechanicalInterest = questionsData.interests.options.find(opt => opt.id === 'mechanical');
-      if (mechanicalInterest && answers.interests !== 'mechanical') {
-        if (recommendedSchool.name !== "大阪高専") {
-          // Consider Osaka Kosen as a secondary recommendation
-        }
-      }
+    if (results.length === 0) {
+      return (
+        <div className="text-center space-y-4 p-8 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <h2 className="text-2xl font-bold text-yellow-800">診断結果が見つかりませんでした</h2>
+          <p className="text-yellow-700">条件に合う高専が見つからなかったようです。回答を変えてもう一度お試しください。</p>
+          <Button onClick={handleRestart}>もう一度診断する</Button>
+        </div>
+      )
     }
-
-    const sortedResults = [...sampleResults].sort((a, b) => b.matchRate - a.matchRate);
 
     return (
       <div className="space-y-10">
@@ -370,88 +411,91 @@ export default function DiagnosisPage() {
         </div>
 
         <div className="space-y-8">
-          {sortedResults.map((result, index) => (
-            <Card 
-              key={result.id} 
-              className={`shadow-xl border rounded-2xl overflow-hidden transition-all duration-300 ease-in-out transform hover:scale-[1.02] bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm ${index === 0 ? `border-theme-primary ring-2 ring-theme-primary/30 dark:border-sky-500 dark:ring-sky-500/30` : `border-gray-200 dark:border-slate-700`}`}>
-              {index === 0 && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-theme-primary to-theme-secondary text-white px-5 py-1.5 rounded-full text-sm font-semibold shadow-lg z-10">
-                  <Sparkles className="inline-block h-4 w-4 mr-1.5 -mt-0.5" /> 最適なマッチ
-                </div>
-              )}
-              <CardContent className="p-6 md:p-8 relative">
-                {index === 0 && <div className="h-4"></div>}
-                <div className="grid md:grid-cols-[200px_1fr] gap-6 items-center">
-                  <div className="relative w-full h-48 md:h-full rounded-lg overflow-hidden shadow-md aspect-square md:aspect-auto">
-                    <Image
-                      src={result.image || "/placeholder.svg"}
-                      alt={result.name}
-                      fill
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
+          {results.map((result, index) => (
+            <motion.div
+              key={result.id}
+              initial={{ opacity: 0, y: 50, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.5, delay: index * 0.1, ease: "easeOut" }}
+            >
+              <Card 
+                className={`shadow-xl border rounded-2xl overflow-hidden transition-all duration-300 ease-in-out transform hover:scale-[1.02] bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm ${index === 0 ? `border-theme-primary ring-2 ring-theme-primary/30 dark:border-sky-500 dark:ring-sky-500/30` : `border-gray-200 dark:border-slate-700`}`}>
+                {index === 0 && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-theme-primary to-theme-secondary text-white px-5 py-1.5 rounded-full text-sm font-semibold shadow-lg z-10">
+                    <Sparkles className="inline-block h-4 w-4 mr-1.5 -mt-0.5" /> 最適なマッチ
                   </div>
-                  <div className="space-y-3">
-                    <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
-                      <div>
-                        <CardTitle className={`text-2xl font-bold tracking-tight ${index === 0 ? (result.color === 'theme-primary' ? 'text-theme-primary dark:text-sky-400' : result.color === 'theme-secondary' ? 'text-theme-secondary dark:text-amber-400' : 'text-theme-accent dark:text-pink-400') : 'text-gray-800 dark:text-white'}`}>{result.name}</CardTitle>
-                        <CardDescription className="flex items-center gap-1.5 mt-1 text-sm text-gray-600 dark:text-slate-400">
-                          <MapPin className="h-4 w-4" /> {result.location}
-                        </CardDescription>
-                      </div>
-                      <div className="flex flex-col items-center text-center pt-2 sm:pt-0">
-                        <div className="relative w-20 h-20">
-                          <svg className="w-full h-full" viewBox="0 0 36 36">
-                            <path
-                              className={`stroke-current ${index === 0 ? (result.color === 'theme-primary' ? 'text-theme-primary/20 dark:text-sky-400/20' : result.color === 'theme-secondary' ? 'text-theme-secondary/20 dark:text-amber-400/20' : 'text-theme-accent/20 dark:text-pink-400/20') : 'text-gray-300/50 dark:text-slate-600'}`}                              
-                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                              fill="none"
-                              strokeWidth="3"
-                            />
-                            <path
-                              className={`stroke-current ${index === 0 ? (result.color === 'theme-primary' ? 'text-theme-primary dark:text-sky-400' : result.color === 'theme-secondary' ? 'text-theme-secondary dark:text-amber-400' : 'text-theme-accent dark:text-pink-400') : 'text-gray-500 dark:text-slate-400'}`}
-                              strokeDasharray={`${result.matchRate}, 100`}
-                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                              fill="none"
-                              strokeWidth="3"
-                              strokeLinecap="round"
-                            />
-                          </svg>
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <span className={`text-xl font-bold ${index === 0 ? (result.color === 'theme-primary' ? 'text-theme-primary dark:text-sky-400' : result.color === 'theme-secondary' ? 'text-theme-secondary dark:text-amber-400' : 'text-theme-accent dark:text-pink-400') : 'text-gray-700 dark:text-slate-200'}`}>{result.matchRate}<span className="text-xs">%</span></span>
-                          </div>
+                )}
+                <CardContent className="p-6 md:p-8 relative">
+                  {index === 0 && <div className="h-4"></div>}
+                  <div className="grid md:grid-cols-[200px_1fr] gap-6 items-center">
+                    <div className="relative w-full h-48 md:h-full rounded-lg overflow-hidden shadow-md aspect-square md:aspect-auto">
+                      <Image
+                        src={result.imageUrl || "/placeholder.svg"}
+                        alt={result.name}
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
+                        <div>
+                          <CardTitle className={`text-2xl font-bold tracking-tight ${index === 0 ? 'text-theme-primary dark:text-sky-400' : 'text-gray-800 dark:text-white'}`}>{result.name}</CardTitle>
+                          <CardDescription className="flex items-center gap-1.5 mt-1 text-sm text-gray-600 dark:text-slate-400">
+                            <MapPin className="h-4 w-4" /> {result.location}
+                          </CardDescription>
                         </div>
-                        <p className="text-xs font-medium mt-1 text-gray-500 dark:text-slate-400">マッチ度</p>
+                        <div className="flex flex-col items-center text-center pt-2 sm:pt-0">
+                          <div className="relative w-20 h-20">
+                            <svg className="w-full h-full" viewBox="0 0 36 36">
+                              <path
+                                className={`stroke-current ${index === 0 ? 'text-theme-primary/20 dark:text-sky-400/20' : 'text-gray-300/50 dark:text-slate-600'}`}                              
+                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                fill="none"
+                                strokeWidth="3"
+                              />
+                              <path
+                                className={`stroke-current ${index === 0 ? 'text-theme-primary dark:text-sky-400' : 'text-gray-500 dark:text-slate-400'}`}
+                                strokeDasharray={`${result.matchRate}, 100`}
+                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                fill="none"
+                                strokeWidth="3"
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <span className={`text-xl font-bold ${index === 0 ? 'text-theme-primary dark:text-sky-400' : 'text-gray-700 dark:text-slate-200'}`}>{result.matchRate}<span className="text-xs">%</span></span>
+                            </div>
+                          </div>
+                          <p className="text-xs font-medium mt-1 text-gray-500 dark:text-slate-400">マッチ度</p>
+                        </div>
                       </div>
-                    </div>
-                    
-                    <div>
-                      <h3 className={`font-semibold text-lg ${index === 0 ? (result.color === 'theme-primary' ? 'text-theme-primary dark:text-sky-400' : result.color === 'theme-secondary' ? 'text-theme-secondary dark:text-amber-400' : 'text-theme-accent dark:text-pink-400') : 'text-gray-700 dark:text-slate-200'}`}>{result.department}</h3>
-                      <p className="text-sm text-gray-600 dark:text-slate-300 mt-1 leading-relaxed">{result.description}</p>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium mb-2 text-gray-700 dark:text-slate-300">この高専の特徴</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {result.features.map((feature, i) => (
-                          <Badge key={i} variant="outline" className={`border-gray-300 text-gray-600 dark:border-slate-600 dark:text-slate-300 ${index === 0 ? (result.color === 'theme-primary' ? '!border-theme-primary/70 !text-theme-primary dark:!border-sky-500/70 dark:!text-sky-400' : result.color === 'theme-secondary' ? '!border-theme-secondary/70 !text-theme-secondary dark:!border-amber-500/70 dark:!text-amber-400' : '!border-theme-accent/70 !text-theme-accent dark:!border-pink-500/70 dark:!text-pink-400') : '' }`}>
-                            {feature}
-                          </Badge>
-                        ))}
+                      
+                      <div>
+                        <h3 className={`font-semibold text-lg ${index === 0 ? 'text-theme-primary dark:text-sky-400' : 'text-gray-700 dark:text-slate-200'}`}>{result.departments?.join(', ') || '学科情報なし'}</h3>
+                        <p className="text-sm text-gray-600 dark:text-slate-300 mt-1 leading-relaxed">{result.matchReason}</p>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium mb-2 text-gray-700 dark:text-slate-300">この高専の概要</h4>
+                        <p className="text-sm text-gray-600 dark:text-slate-300 mt-1 leading-relaxed">{result.description}</p>
                       </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-              <CardFooter className="p-6 bg-gray-50/50 dark:bg-slate-800/30 border-t dark:border-slate-700/50 rounded-b-2xl">
-                <Button
-                  size="lg"
-                  className={`w-full font-semibold py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 ease-in-out flex items-center gap-2 group ${index === 0 ? 'bg-gradient-to-r from-theme-primary to-theme-secondary hover:from-theme-primary/90 hover:to-theme-secondary/90 text-white' : 'bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-600'}`}
-                  variant={index === 0 ? "default" : "outline"}
-                >
-                  詳細を見る <ArrowRight className={`ml-2 h-5 w-5 ${index === 0 ? 'group-hover:translate-x-1' : 'group-hover:translate-x-0.5'} transition-transform duration-200`} />
-                </Button>
-              </CardFooter>
-            </Card>
+                </CardContent>
+                <CardFooter className="p-6 bg-gray-50/50 dark:bg-slate-800/30 border-t dark:border-slate-700/50 rounded-b-2xl">
+                  <Button
+                    asChild
+                    size="lg"
+                    className={`w-full font-semibold py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 ease-in-out flex items-center gap-2 group ${index === 0 ? 'bg-gradient-to-r from-theme-primary to-theme-secondary hover:from-theme-primary/90 hover:to-theme-secondary/90 text-white' : 'bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-600'}`}
+                    variant={index === 0 ? "default" : "outline"}
+                  >
+                    <Link href={`/find-kosen/${result.id}`}>
+                      詳細を見る <ArrowRight className={`ml-2 h-5 w-5 ${index === 0 ? 'group-hover:translate-x-1' : 'group-hover:translate-x-0.5'} transition-transform duration-200`} />
+                    </Link>
+                  </Button>
+                </CardFooter>
+              </Card>
+            </motion.div>
           ))}
         </div>
 
@@ -489,99 +533,106 @@ export default function DiagnosisPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-sky-100 dark:from-slate-900 dark:to-sky-900">
-      <Header />
-
       <main className="container py-8 md:py-12">
-        <div className="max-w-4xl mx-auto">
-          {!showResults && !isAnalyzing ? (
-            <Card className="shadow-xl border-gray-200 rounded-2xl overflow-hidden bg-white/80 backdrop-blur-md dark:bg-slate-800/80 dark:border-slate-700">
-              <CardHeader className="border-b border-gray-200 dark:border-slate-700 p-6">
-                <div className="flex flex-col items-center text-center space-y-2">
-                  <Badge className="bg-theme-primary text-white px-4 py-1.5 text-sm font-semibold rounded-full shadow-md">無料診断</Badge>
-                  <CardTitle className="text-3xl font-bold tracking-tight text-gray-800 dark:text-white">高専適性診断</CardTitle>
-                  <CardDescription className="text-base text-gray-600 dark:text-slate-300 max-w-md">
-                    あなたの興味や適性に合った高専を見つけるための診断です。以下の質問に答えてください。
-                  </CardDescription>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6 md:p-8">
-                <Tabs value={activeTab} onValueChange={(value) => { setActiveTab(value); setCurrentStep(0); }} className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 mb-6 bg-gray-100 dark:bg-slate-700 rounded-lg p-1 shadow-inner">
-                    <TabsTrigger
-                      value="structured"
-                      className="py-2.5 text-sm font-medium data-[state=active]:bg-theme-primary data-[state=active]:text-white data-[state=active]:shadow-md rounded-md transition-all duration-200 ease-in-out dark:text-slate-300 dark:data-[state=active]:text-white"
-                    >
-                      選択式診断
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="freeform"
-                      className="py-2.5 text-sm font-medium data-[state=active]:bg-theme-primary data-[state=active]:text-white data-[state=active]:shadow-md rounded-md transition-all duration-200 ease-in-out dark:text-slate-300 dark:data-[state=active]:text-white"
-                    >
-                      AI自由記述診断
-                    </TabsTrigger>
-                  </TabsList>
-                  
-                  <div className="mb-6 px-1">
-                    <Progress value={progressValue} className="w-full h-2.5 bg-gray-200 dark:bg-slate-700 [&>div]:bg-theme-primary transition-all duration-300 ease-in-out rounded-full" />
-                    {activeTab === "structured" && (
-                      <p className="text-xs text-gray-500 dark:text-slate-400 mt-1.5 text-right">ステップ {currentStep > structuredQuestionKeys.length ? structuredQuestionKeys.length : currentStep} / {structuredQuestionKeys.length}</p>
-                    )}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={showResults ? "results" : isAnalyzing ? "analyzing" : "questions"}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="max-w-4xl mx-auto"
+          >
+            {!showResults && !isAnalyzing ? (
+              <Card className="shadow-xl border-gray-200 rounded-2xl overflow-hidden bg-white/80 backdrop-blur-md dark:bg-slate-800/80 dark:border-slate-700">
+                <CardHeader className="border-b border-gray-200 dark:border-slate-700 p-6">
+                  <div className="flex flex-col items-center text-center space-y-2">
+                    <Badge className="bg-theme-primary text-white px-4 py-1.5 text-sm font-semibold rounded-full shadow-md">無料診断</Badge>
+                    <CardTitle className="text-3xl font-bold tracking-tight text-gray-800 dark:text-white">高専適性診断</CardTitle>
+                    <CardDescription className="text-base text-gray-600 dark:text-slate-300 max-w-md">
+                      あなたの興味や適性に合った高専を見つけるための診断です。以下の質問に答えてください。
+                    </CardDescription>
                   </div>
+                </CardHeader>
+                <CardContent className="p-6 md:p-8">
+                  <Tabs value={activeTab} onValueChange={(value) => { setActiveTab(value); setCurrentStep(0); }} className="w-full">
+                    <TabsList className="grid w-full grid-cols-2 mb-6 bg-gray-100 dark:bg-slate-700 rounded-lg p-1 shadow-inner">
+                      <TabsTrigger
+                        value="structured"
+                        className="py-2.5 text-sm font-medium data-[state=active]:bg-theme-primary data-[state=active]:text-white data-[state=active]:shadow-md rounded-md transition-all duration-200 ease-in-out dark:text-slate-300 dark:data-[state=active]:text-white"
+                      >
+                        選択式診断
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="freeform"
+                        className="py-2.5 text-sm font-medium data-[state=active]:bg-theme-primary data-[state=active]:text-white data-[state=active]:shadow-md rounded-md transition-all duration-200 ease-in-out dark:text-slate-300 dark:data-[state=active]:text-white"
+                      >
+                        AI自由記述診断
+                      </TabsTrigger>
+                    </TabsList>
+                    
+                    <div className="mb-6 px-1">
+                      <Progress value={progressValue} className="w-full h-2.5 bg-gray-200 dark:bg-slate-700 [&>div]:bg-theme-primary transition-all duration-300 ease-in-out rounded-full" />
+                      {activeTab === "structured" && (
+                        <p className="text-xs text-gray-500 dark:text-slate-400 mt-1.5 text-right">ステップ {currentStep > structuredQuestionKeys.length ? structuredQuestionKeys.length : currentStep} / {structuredQuestionKeys.length}</p>
+                      )}
+                    </div>
 
-                  <TabsContent value="structured" className="space-y-4">
-                    {renderStructuredQuestions()}
-                  </TabsContent>
-                  <TabsContent value="freeform" className="space-y-4">
-                    {renderFreeformQuestion()}
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-              <CardFooter className="flex justify-end p-6 bg-gray-50 dark:bg-slate-800/50 border-t dark:border-slate-700 rounded-b-2xl">
-                <Button
-                  onClick={handleSubmit}
-                  disabled={isSubmitDisabled()}
-                  size="lg"
-                  className="bg-gradient-to-r from-theme-primary to-theme-secondary hover:from-theme-primary/90 hover:to-theme-secondary/90 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 group"
-                >
-                  診断結果を見る <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
-                </Button>
-              </CardFooter>
-            </Card>
-          ) : isAnalyzing ? (
-            <Card className="text-center p-8 md:p-12 shadow-xl border-gray-200 rounded-2xl bg-white/80 backdrop-blur-md dark:bg-slate-800/80 dark:border-slate-700">
-              <div className="flex flex-col items-center justify-center space-y-6">
-                <div className="relative w-20 h-20">
-                  <div className="absolute inset-0 border-4 border-theme-primary/20 rounded-full"></div>
-                  <div className="absolute inset-2 border-4 border-t-theme-primary border-r-theme-primary/50 border-b-theme-primary/30 border-l-transparent rounded-full animate-spin"></div>
-                  <Brain className="absolute inset-0 m-auto h-10 w-10 text-theme-primary opacity-80" />
+                    <TabsContent value="structured" className="space-y-4">
+                      {renderStructuredQuestions()}
+                    </TabsContent>
+                    <TabsContent value="freeform" className="space-y-4">
+                      {renderFreeformQuestion()}
+                    </TabsContent>
+                  </Tabs>
+                </CardContent>
+                <CardFooter className="flex justify-end p-6 bg-gray-50 dark:bg-slate-800/50 border-t dark:border-slate-700 rounded-b-2xl">
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={isSubmitDisabled()}
+                    size="lg"
+                    className="bg-gradient-to-r from-theme-primary to-theme-secondary hover:from-theme-primary/90 hover:to-theme-secondary/90 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 group"
+                  >
+                    診断結果を見る <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
+                  </Button>
+                </CardFooter>
+              </Card>
+            ) : isAnalyzing ? (
+              <Card className="text-center p-8 md:p-12 shadow-xl border-gray-200 rounded-2xl bg-white/80 backdrop-blur-md dark:bg-slate-800/80 dark:border-slate-700">
+                <div className="flex flex-col items-center justify-center space-y-6">
+                  <div className="relative w-24 h-24">
+                    <AnimatePresence>
+                      <motion.div
+                        key={analyzingStep % 5} // アイコンを切り替えるキー
+                        initial={{ opacity: 0, scale: 0.5, rotate: -90 }}
+                        animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                        exit={{ opacity: 0, scale: 0.5, rotate: 90 }}
+                        transition={{ duration: 0.5, ease: 'easeInOut' }}
+                        className="absolute inset-0 flex items-center justify-center"
+                      >
+                        {[
+                          <BookOpen key="book" className="h-12 w-12 text-theme-primary" />,
+                          <Brain key="brain" className="h-12 w-12 text-theme-secondary" />,
+                          <Briefcase key="brief" className="h-12 w-12 text-theme-accent" />,
+                          <Users key="users" className="h-12 w-12 text-theme-primary" />,
+                          <MapPin key="map" className="h-12 w-12 text-theme-secondary" />,
+                        ][analyzingStep % 5]}
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
+                  <CardTitle className="text-2xl font-semibold text-theme-primary dark:text-sky-400">AIが診断中...</CardTitle>
+                  <CardDescription className="text-base text-gray-600 dark:text-slate-300 max-w-sm">
+                    あなたの回答を丁寧に分析し、あなたにピッタリの高専を見つけるお手伝いをしています。もう少々お待ちください。
+                  </CardDescription>
+                  <Progress value={progress} className="w-full max-w-xs h-2 mt-2 bg-gray-200 dark:bg-slate-700 [&>div]:bg-theme-primary rounded-full transition-all duration-300" />
                 </div>
-                <CardTitle className="text-2xl font-semibold text-theme-primary dark:text-sky-400">AIが診断中...</CardTitle>
-                <CardDescription className="text-base text-gray-600 dark:text-slate-300 max-w-sm">
-                  あなたの回答を丁寧に分析し、あなたにピッタリの高専を見つけるお手伝いをしています。もう少々お待ちください。
-                </CardDescription>
-                <Progress value={80} className="w-full max-w-xs h-2 mt-2 bg-gray-200 dark:bg-slate-700 [&>div]:bg-theme-primary rounded-full animate-pulse" />
-              </div>
-            </Card>
-          ) : (
-            renderResults()
-          )}
-        </div>
+              </Card>
+            ) : (
+              renderResults()
+            )}
+          </motion.div>
+        </AnimatePresence>
       </main>
-
-      <footer className="border-t bg-white py-6">
-        <div className="container">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center">
-              <div className="relative h-7 w-[7rem]">
-                <Image src="/images/logo.png" alt="高専マッチング" fill className="object-contain" />
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              &copy; {new Date().getFullYear()} 高専マッチング. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

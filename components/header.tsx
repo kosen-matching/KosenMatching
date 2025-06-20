@@ -75,14 +75,14 @@ export default function Header() {
             </div>
           </Link>
         </div>
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden sp:flex items-center gap-6">
           <Link href="/find-kosen" className="text-sm font-medium hover:text-theme-primary">
             高専を探す
           </Link>
-          <Link href="#" className="text-sm font-medium hover:text-theme-primary">
-            適性診断
+          <Link href="/diagnosis" className="text-sm font-medium hover:text-theme-primary">
+            高専マッチ
           </Link>
-          <Link href="#" className="text-sm font-medium hover:text-theme-primary">
+          <Link href="/reviews" className="text-sm font-medium hover:text-theme-primary">
             体験談
           </Link>
           <Link href="/direct-question" className="text-sm font-medium hover:text-theme-primary">
@@ -92,15 +92,15 @@ export default function Header() {
             よくある質問
           </Link>
         </nav>
-        <div className="md:hidden flex items-center">
+        <div className="sp:hidden flex items-center">
           <DropdownMenu open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
+              <Button variant="ghost" size="icon" className="sp:hidden">
                 <Menu className="h-6 w-6" />
                 <span className="sr-only">Toggle menu</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-screen max-w-xs md:max-w-none p-4 bg-blue-50">
+            <DropdownMenuContent align="end" className="w-screen max-w-xs sp:max-w-none p-4 bg-blue-50">
               <nav className="flex flex-col items-start gap-4">
                 <DropdownMenuItem asChild>
                   <Link
@@ -113,16 +113,16 @@ export default function Header() {
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link
-                    href="#"
+                    href="/diagnosis"
                     className="text-lg font-medium hover:text-theme-primary"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    適性診断
+                    高専マッチ
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link
-                    href="#"
+                    href="/reviews"
                     className="text-lg font-medium hover:text-theme-primary"
                     onClick={() => setMobileMenuOpen(false)}
                   >
@@ -229,25 +229,25 @@ export default function Header() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden sp:flex items-center gap-4">
           {loading ? (
             <div>Loading...</div>
           ) : user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2 p-1 pr-2">
+                <Button variant="ghost" className="flex items-center gap-2 p-1 pr-2 hover:!bg-muted hover:!text-foreground focus:!bg-muted focus:!text-foreground">
                   {user.profileImageUrl ? (
                     <Image
                       key={user.profileImageUrl}
                       src={`/api/images/${user.profileImageUrl}`}
                       alt="プロフィール画像"
-                      width={32}
-                      height={32}
+                      width={40}
+                      height={40}
                       className="rounded-full object-cover"
                     />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                      <User className="h-5 w-5 text-gray-500" />
+                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                      <User className="h-6 w-6 text-gray-500" />
                     </div>
                   )}
                   <span className="text-sm font-medium">{user.username}</span>

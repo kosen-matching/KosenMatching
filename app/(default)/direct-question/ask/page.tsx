@@ -1,5 +1,6 @@
 "use client"
 
+import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -7,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Lightbulb } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { TagInput } from "@/components/tag-input"
+import { useToast } from "@/components/ui/use-toast"
 
 const predefinedTags = [
   {
@@ -81,6 +83,69 @@ const predefinedTags = [
 const EMPTY_ARRAY: string[] = [];
 
 export default function AskQuestionPage() {
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [nickname, setNickname] = useState("");
+  const [email, setEmail] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { toast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    if (!content || !nickname || !email) {
+      toast({
+        title: "エラー",
+        description: "質問内容、ニックネーム、メールアドレスは必須です。",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/direct-question", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ title, content, nickname, email, tags: selectedTags }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "成功",
+          description: "質問が正常に投稿されました！",
+        });
+        setTitle("");
+        setContent("");
+        setNickname("");
+        setEmail("");
+        setSelectedTags([]);
+      } else {
+        toast({
+          title: "エラー",
+          description: result.message || "質問の投稿に失敗しました。",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("質問投稿エラー:", error);
+      toast({
+        title: "エラー",
+        description: "ネットワークエラーが発生しました。",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="container mx-auto py-8 md:py-12">
       <Card className="shadow-lg rounded-lg border border-gray-200 p-6">
@@ -109,76 +174,96 @@ export default function AskQuestionPage() {
             高専の在校生や卒業生に聞きたいことを入力してください。
           </p>
         </CardHeader>
-        <CardContent className="grid gap-6">
-          <div className="space-y-2">
-            <label
-              htmlFor="question-title"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              質問のタイトル (任意)
-            </label>
-            <Input
-              id="question-title"
-              placeholder="例：〇〇高専の〇〇学科の雰囲気について"
-              className="focus:border-blue-500 focus:ring-blue-500/20"
-            />
+        <form onSubmit={handleSubmit}>
+          <CardContent className="grid gap-6">
+            <div className="space-y-2">
+              <label
+                htmlFor="question-title"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                質問のタイトル (任意)
+              </label>
+              <Input
+                id="question-title"
+                placeholder="例：〇〇高専の〇〇学科の雰囲気について"
+                className="focus:border-blue-500 focus:ring-blue-500/20"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label
+                htmlFor="question-content"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                質問内容
+              </label>
+              <Textarea
+                id="question-content"
+                placeholder="具体的な質問内容を記入してください。"
+                className="min-h-[150px] focus:border-blue-500 focus:ring-blue-500/20"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label
+                htmlFor="nickname"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                ニックネーム (公開されます)
+              </label>
+              <Input
+                id="nickname"
+                placeholder="こうせん太郎"
+                className="focus:border-blue-500 focus:ring-blue-500/20"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label
+                htmlFor="email"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                メールアドレス (回答があった場合にお知らせします。公開されません)
+              </label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="tarou@example.com"
+                className="focus:border-blue-500 focus:ring-blue-500/20"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label
+                htmlFor="tags"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                タグ (任意)
+              </label>
+              <TagInput
+                predefinedTags={predefinedTags}
+                initialSelectedTags={selectedTags}
+                onChange={setSelectedTags}
+              />
+            </div>
+          </CardContent>
+          <div className="flex justify-end gap-2 mt-6">
+            <Button variant="outline" onClick={() => {
+                setTitle("");
+                setContent("");
+                setNickname("");
+                setEmail("");
+                setSelectedTags([]);
+            }} className="border-gray-300 text-gray-700 hover:bg-gray-100" type="button">キャンセル</Button>
+            <Button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white elegant-button" disabled={isSubmitting}>
+              {isSubmitting ? "送信中..." : "質問を送信する"}
+            </Button>
           </div>
-          <div className="space-y-2">
-            <label
-              htmlFor="question-content"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              質問内容
-            </label>
-            <Textarea
-              id="question-content"
-              placeholder="具体的な質問内容を記入してください。"
-              className="min-h-[150px] focus:border-blue-500 focus:ring-blue-500/20"
-            />
-          </div>
-          <div className="space-y-2">
-            <label
-              htmlFor="nickname"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              ニックネーム (公開されます)
-            </label>
-            <Input
-              id="nickname"
-              placeholder="こうせん太郎"
-              className="focus:border-blue-500 focus:ring-blue-500/20"
-            />
-          </div>
-          <div className="space-y-2">
-            <label
-              htmlFor="email"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              メールアドレス (回答があった場合にお知らせします。公開されません)
-            </label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="tarou@example.com"
-              className="focus:border-blue-500 focus:ring-blue-500/20"
-            />
-          </div>
-          <div className="space-y-2">
-            <label
-              htmlFor="tags"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              タグ (任意)
-            </label>
-            <TagInput predefinedTags={predefinedTags} initialSelectedTags={EMPTY_ARRAY} />
-          </div>
-        </CardContent>
-        <div className="flex justify-end gap-2 mt-6">
-          <Button variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-100">キャンセル</Button>
-          <Button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white elegant-button">
-            質問を送信する
-          </Button>
-        </div>
+        </form>
       </Card>
     </div>
   )
