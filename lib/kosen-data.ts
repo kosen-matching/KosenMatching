@@ -70,9 +70,9 @@ export const kosenList: Kosen[] = [
     type: "国立", 
     departments: ["情報システムコース", "情報通信コース", "知能エレクトロニクスコース", "応用化学コース", "ロボティクスコース"], 
     description: "2009年に宮城工業高等専門学校と仙台電波工業高等専門学校が統合・再編されて発足した国立高等専門学校。広瀬キャンパスは旧仙台電波工業高等専門学校。地域社会や産業界との連携にも力を入れている。",
-    imageUrl: "https://upload.wikimedia.org/wikipedia/commons/1/17/%E5%BA%83%E7%80%AC%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%91%E3%82%B9%E6%A0%A1%E8%88%8E.jpg",
+    imageUrl: "https://upload.wikimedia.org/wikipedia/commons/5/5a/SNCT-Hirose.jpg",
     imageCreditText: "Koho snct, CC BY-SA 4.0, via Wikimedia Commons",
-    imageCreditUrl: "https://commons.wikimedia.org/wiki/File:%E5%BA%83%E7%80%AC%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%91%E3%82%B9%E6%A0%A1%E8%88%8E.jpg"
+    imageCreditUrl: "https://ja.wikipedia.org/wiki/File:SNCT-Hirose.jpg"
   },
   { 
     id: "akita", 

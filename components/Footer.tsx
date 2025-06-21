@@ -86,12 +86,12 @@ export default function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-muted-foreground hover:text-theme-accent">
+                  <Link href="/privacy" className="text-muted-foreground hover:text-theme-accent">
                     プライバシーポリシー
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-muted-foreground hover:text-theme-accent">
+                  <Link href="/terms" className="text-muted-foreground hover:text-theme-accent">
                     利用規約
                   </Link>
                 </li>

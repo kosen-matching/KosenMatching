@@ -62,10 +62,10 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between py-2">
+      <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center">
           <Link href="/" className="flex items-center">
-            <div className="relative h-14 w-56">
+            <div className="relative h-16 w-64">
               <Image 
                 src="/images/logo.png" 
                 alt="高専マッチング ロゴ" 
