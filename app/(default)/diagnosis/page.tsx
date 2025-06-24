@@ -8,20 +8,21 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
-import { Slider } from "@/components/ui/slider"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
-import { ArrowRight, Home, BookOpen, Briefcase, Brain, MapPin, Users, Sparkles, Loader2 } from "lucide-react"
+import { ArrowRight, Home, BookOpen, Briefcase, Brain, MapPin, Users, Sparkles, GraduationCap, Heart, Target, School, Trophy, PenLine, Calculator, FlaskConical, Languages, BookText, Globe } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { Progress } from "@/components/ui/progress"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
 
 // 型定義
 interface QuestionBase {
   title: string;
-  description?: string; // descriptionはオプショナルに変更
+  description?: string;
 }
 
 interface RadioOption {
@@ -34,15 +35,39 @@ interface RadioQuestion extends QuestionBase {
   options: RadioOption[];
 }
 
-interface SliderInfo {
+interface CheckboxOption {
   id: string;
   label: string;
-  defaultValue: number;
 }
 
-interface SliderQuestion extends QuestionBase {
-  type: "slider";
-  sliders: SliderInfo[];
+interface CheckboxQuestion extends QuestionBase {
+  type: "checkbox";
+  options: CheckboxOption[];
+}
+
+interface SubjectEvaluation {
+  id: string;
+  label: string;
+}
+
+interface SubjectsQuestion extends QuestionBase {
+  type: "subjects";
+  subjects: SubjectEvaluation[];
+}
+
+interface EnvironmentOption {
+  id: string;
+  label: string;
+}
+
+interface EnvironmentQuestion extends QuestionBase {
+  type: "environment";
+  items: EnvironmentOption[];
+}
+
+interface NumberInputQuestion extends QuestionBase {
+  type: "number";
+  placeholder: string;
 }
 
 interface TextareaQuestion extends QuestionBase {
@@ -52,15 +77,30 @@ interface TextareaQuestion extends QuestionBase {
 
 // questionsDataの型を修正
 interface QuestionsData {
+  grade: RadioQuestion;
   interests: RadioQuestion;
-  subjects: RadioQuestion;
+  subjects: SubjectsQuestion;
+  deviation: NumberInputQuestion;
   future: RadioQuestion;
   personality: RadioQuestion;
-  environment: SliderQuestion;
+  environment: EnvironmentQuestion;
+  lifestyle: RadioQuestion;
+  location: RadioQuestion;
+  clubActivities: CheckboxQuestion;
 }
 
 // 診断質問のデータ
 const questionsData: QuestionsData = {
+  grade: {
+    title: "あなたの学年",
+    description: "現在の学年を選んでください",
+    type: "radio",
+    options: [
+      { id: "ms1", label: "中学1年生" },
+      { id: "ms2", label: "中学2年生" },
+      { id: "ms3", label: "中学3年生" },
+    ],
+  },
   interests: {
     title: "興味のある分野",
     description: "最も興味を持っている分野を選んでください",
@@ -75,17 +115,22 @@ const questionsData: QuestionsData = {
     ],
   },
   subjects: {
-    title: "得意な科目",
-    description: "最も得意な科目を選んでください",
-    type: "radio",
-    options: [
+    title: "各教科の得意・不得意",
+    description: "それぞれの教科について、あなたの状況を選んでください",
+    type: "subjects",
+    subjects: [
       { id: "math", label: "数学" },
-      { id: "physics", label: "物理" },
-      { id: "chemistry", label: "化学" },
-      { id: "biology", label: "生物" },
+      { id: "science", label: "理科" },
       { id: "english", label: "英語" },
       { id: "japanese", label: "国語" },
+      { id: "socialStudies", label: "社会" },
     ],
+  },
+  deviation: {
+    title: "現在の学力",
+    description: "模試などで計測した、現在のあなたの偏差値を半角数字で入力してください。",
+    type: "number",
+    placeholder: "例: 65",
   },
   future: {
     title: "将来やりたいこと",
@@ -114,27 +159,72 @@ const questionsData: QuestionsData = {
     ],
   },
   environment: {
-    title: "希望する環境",
-    description: "学習環境について、以下の項目の重要度を選んでください",
-    type: "slider",
-    sliders: [
-      { id: "facilities", label: "充実した設備・機材", defaultValue: 50 },
-      { id: "location", label: "都市部に近い立地", defaultValue: 50 },
-      { id: "dormitory", label: "寮生活", defaultValue: 50 },
-      { id: "club", label: "部活動の充実", defaultValue: 50 },
-      { id: "international", label: "国際交流の機会", defaultValue: 50 },
+    title: "学習環境の希望",
+    description: "以下の項目について、どの程度重視するか選んでください",
+    type: "environment",
+    items: [
+      { id: "facilities", label: "充実した設備・機材" },
+      { id: "dormitory", label: "寮生活の充実" },
+      { id: "club", label: "部活動の充実" },
+      { id: "international", label: "国際交流の機会" },
+      { id: "practicalTraining", label: "企業実習・インターンシップ" },
+      { id: "research", label: "研究活動の充実" },
     ],
   },
-}
+  lifestyle: {
+    title: "希望する生活スタイル",
+    description: "高専生活をどのように過ごしたいか選んでください",
+    type: "radio",
+    options: [
+      { id: "balance", label: "勉強と部活動・趣味をバランスよく楽しみたい" },
+      { id: "studyFocus", label: "勉強・研究に集中したい" },
+      { id: "clubFocus", label: "部活動やサークル活動を頑張りたい" },
+      { id: "socialLife", label: "友人との交流を大切にしたい" },
+      { id: "independent", label: "自立した生活を送りたい" },
+    ],
+  },
+  location: {
+    title: "希望する場所",
+    description: "どのような環境で学びたいか選んでください",
+    type: "radio", 
+    options: [
+      { id: "bigCity", label: "大都市（東京・大阪・名古屋など）" },
+      { id: "mediumCity", label: "地方都市（県庁所在地など）" },
+      { id: "suburban", label: "郊外・自然豊かな環境" },
+      { id: "anywhere", label: "特にこだわらない" },
+      { id: "nearHome", label: "実家から通える範囲" },
+    ],
+  },
+  clubActivities: {
+    title: "興味のある部活動・課外活動",
+    description: "参加したい活動を選んでください（複数選択可）",
+    type: "checkbox",
+    options: [
+      { id: "robocon", label: "ロボコン・技術系コンテスト" },
+      { id: "sports", label: "体育系部活動" },
+      { id: "culture", label: "文化系部活動" },
+      { id: "volunteer", label: "ボランティア活動" },
+      { id: "none", label: "特に参加予定はない" },
+    ],
+  },
+};
 
 const freeformQuestionData: TextareaQuestion = {
   title: "自由記述",
   description:
-    "あなたの興味や将来の夢、学びたいことなどを自由に記入してください。AIがあなたに合った高専を提案します。",
+    "あなたの興味や将来の夢、学びたいこと、現在の学力（偏差値）などを自由に記入してください。AIがあなたに合った高専を提案します。",
   type: "textarea",
   placeholder:
-    "例：ロボット開発に興味があり、将来は自分でロボットを設計したいです。プログラミングも好きで、特に制御系のプログラムに関心があります。チームでものづくりをするのが好きです。",
+    "例：ロボット開発に興味があり、将来は自分でロボットを設計したいです。プログラミングも好きで、特に制御系のプログラムに関心があります。チームでものづくりをするのが好きです。模試の偏差値は65です。",
 }
+
+const subjectIcons: Record<string, React.ReactNode> = {
+  math: <Calculator className="h-6 w-6 text-orange-500" />,
+  science: <FlaskConical className="h-6 w-6 text-green-500" />,
+  english: <Languages className="h-6 w-6 text-blue-500" />,
+  japanese: <BookText className="h-6 w-6 text-red-500" />,
+  socialStudies: <Globe className="h-6 w-6 text-purple-500" />,
+};
 
 // 診断結果の型定義 (APIのレスポンスに合わせる)
 interface DiagnosisResult {
@@ -202,15 +292,43 @@ export default function DiagnosisPage() {
     }
   }
 
-  const handleSliderChange = (questionId: string, sliderId: string, value: number[]) => {
+  const handleSubjectChange = (questionId: string, subjectId: string, value: string) => {
     setAnswers({
       ...answers,
-      [questionId]: { ...(answers[questionId] || {}), [sliderId]: value[0] },
+      [questionId]: { ...(answers[questionId] || {}), [subjectId]: value },
     })
     const questionIndex = structuredQuestionKeys.indexOf(questionId as keyof QuestionsData);
     if (questionIndex !== -1 && questionIndex >= currentStep) {
       setCurrentStep(questionIndex + 1);
     }
+  }
+
+  const handleCheckboxChange = (questionId: string, optionId: string, checked: boolean) => {
+    const currentAnswersForQuestion = (answers[questionId] as string[] | undefined) || [];
+    let newAnswersForQuestion: string[];
+
+    if (checked) {
+      newAnswersForQuestion = [...currentAnswersForQuestion, optionId];
+    } else {
+      newAnswersForQuestion = currentAnswersForQuestion.filter(id => id !== optionId);
+    }
+    
+    setAnswers({ ...answers, [questionId]: newAnswersForQuestion });
+  };
+
+  const handleEnvironmentChange = (questionId: string, itemId: string, value: string) => {
+    setAnswers({
+      ...answers,
+      [questionId]: { ...(answers[questionId] || {}), [itemId]: value },
+    })
+    const questionIndex = structuredQuestionKeys.indexOf(questionId as keyof QuestionsData);
+    if (questionIndex !== -1 && questionIndex >= currentStep) {
+      setCurrentStep(questionIndex + 1);
+    }
+  }
+
+  const handleNumberChange = (questionId: string, value: string) => {
+    setAnswers({ ...answers, [questionId]: value });
   }
 
   const handleFreeformChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -224,6 +342,7 @@ export default function DiagnosisPage() {
     const payload = {
       answers,
       freeformText,
+      grade: answers.grade,
     }
 
     try {
@@ -261,7 +380,7 @@ export default function DiagnosisPage() {
 
   const isSubmitDisabled = () => {
     if (activeTab === "structured") {
-      return !answers.interests || !answers.subjects
+      return !answers.grade || !answers.interests || !answers.future
     } else {
       return freeformText.length < 20
     }
@@ -270,7 +389,7 @@ export default function DiagnosisPage() {
   const renderStructuredQuestions = () => {
     return (
       <div className="space-y-10">
-        {(Object.entries(questionsData) as [keyof QuestionsData, RadioQuestion | SliderQuestion][]).map(([id, question], index) => {
+        {(Object.entries(questionsData) as [keyof QuestionsData, RadioQuestion | SubjectsQuestion | EnvironmentQuestion | CheckboxQuestion | NumberInputQuestion][]).map(([id, question], index) => {
           return (
             <motion.div
               key={id}
@@ -279,13 +398,18 @@ export default function DiagnosisPage() {
               transition={{ duration: 0.5, delay: index * 0.1, ease: "easeOut" }}
             >
               <Card className="shadow-lg border-gray-200 rounded-xl overflow-hidden">
-                <CardHeader className="bg-gray-50 p-6">
+                <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50 p-6">
                   <div className="flex items-center gap-3">
-                    {id === "interests" && <BookOpen className="h-6 w-6 text-theme-primary" />}
-                    {id === "subjects" && <Brain className="h-6 w-6 text-theme-secondary" />}
-                    {id === "future" && <Briefcase className="h-6 w-6 text-theme-accent" />}
-                    {id === "personality" && <Users className="h-6 w-6 text-theme-primary" />}
-                    {id === "environment" && <MapPin className="h-6 w-6 text-theme-secondary" />}
+                    {id === "grade" && <GraduationCap className="h-6 w-6 text-pink-600" />}
+                    {id === "interests" && <Heart className="h-6 w-6 text-blue-600" />}
+                    {id === "subjects" && <BookOpen className="h-6 w-6 text-purple-600" />}
+                    {id === "deviation" && <PenLine className="h-6 w-6 text-cyan-600" />}
+                    {id === "future" && <Target className="h-6 w-6 text-green-600" />}
+                    {id === "personality" && <Brain className="h-6 w-6 text-red-600" />}
+                    {id === "environment" && <School className="h-6 w-6 text-indigo-600" />}
+                    {id === "lifestyle" && <Users className="h-6 w-6 text-orange-600" />}
+                    {id === "location" && <MapPin className="h-6 w-6 text-teal-600" />}
+                    {id === "clubActivities" && <Trophy className="h-6 w-6 text-yellow-600" />}
                     <div>
                       <CardTitle className="text-xl font-semibold text-gray-800">{question.title}</CardTitle>
                       {question.description && <CardDescription className="text-sm text-gray-600 mt-1">{question.description}</CardDescription>}
@@ -303,43 +427,164 @@ export default function DiagnosisPage() {
                         <Label
                           key={option.id}
                           htmlFor={`${id}-${option.id}`}
-                          className={`flex items-center space-x-3 rounded-lg border p-4 cursor-pointer transition-all hover:border-theme-primary/80 ${answers[id] === option.id ? "border-theme-primary ring-2 ring-theme-primary/50 bg-theme-primary/5" : "border-gray-300"}`}
+                          className={`flex items-center space-x-3 rounded-lg border p-4 cursor-pointer transition-all hover:border-blue-500/80 ${answers[id] === option.id ? "border-blue-500 ring-2 ring-blue-500/20 bg-blue-50" : "border-gray-300"}`}
                         >
-                          <RadioGroupItem value={option.id} id={`${id}-${option.id}`} className="h-5 w-5 border-gray-400 text-theme-primary focus:ring-theme-primary/50" />
+                          <RadioGroupItem value={option.id} id={`${id}-${option.id}`} className="h-5 w-5 border-gray-400 text-blue-600 focus:ring-blue-500/50" />
                           <span className="font-medium text-gray-700">{option.label}</span>
                         </Label>
                       ))}
                     </RadioGroup>
                   )}
 
-                  {question.type === "slider" && (
+                  {question.type === "subjects" && (
                     <div className="space-y-6">
-                      {question.sliders.map((slider) => (
-                        <div key={slider.id} className="space-y-3">
-                          <div className="flex justify-between items-center">
-                            <Label htmlFor={slider.id} className="text-base font-medium text-gray-700">{slider.label}</Label>
-                            <span className="text-sm font-semibold text-theme-primary bg-theme-primary/10 px-2 py-1 rounded-md">
-                              {answers[id]?.[slider.id] || slider.defaultValue}%
-                            </span>
+                      {question.subjects.map((subject) => (
+                        <div key={subject.id} className="space-y-3">
+                          <div className="flex justify-between items-center mb-2">
+                             <div className="flex items-center gap-3">
+                                {subjectIcons[subject.id]}
+                                <Label className="text-base font-semibold text-gray-800 dark:text-slate-200">{subject.label}</Label>
+                            </div>
                           </div>
-                          <Slider
-                            id={slider.id}
-                            defaultValue={[slider.defaultValue]}
-                            max={100}
-                            step={1}
-                            onValueChange={(value) => handleSliderChange(id, slider.id, value)}
-                            className="[&>span:first-child]:h-2 [&>span:first-child]:bg-gray-200 [&_[role=slider]]:bg-theme-primary [&_[role=slider]]:h-5 [&_[role=slider]]:w-5 [&_[role=slider]]:border-2 [&_[role=slider]]:border-white [&_[role=slider]]:shadow-md [&_[role=slider]]:focus-visible:ring-2 [&_[role=slider]]:focus-visible:ring-theme-primary/50"
-                          />
-                          <div className="flex justify-between text-xs text-gray-500">
-                            <span>あまり重視しない</span>
-                            <span>非常に重視する</span>
-                          </div>
+                          <RadioGroup
+                            value={answers[id]?.[subject.id] || ""}
+                            onValueChange={(value) => handleSubjectChange(id, subject.id, value)}
+                            className="grid grid-cols-3 gap-3"
+                          >
+                            <Label
+                              htmlFor={`${id}-${subject.id}-good`}
+                              className={`flex items-center justify-center p-3 rounded-lg border cursor-pointer transition-all ${
+                                answers[id]?.[subject.id] === "good" 
+                                  ? "border-green-500 bg-green-50 text-green-700" 
+                                  : "border-gray-300 hover:border-green-400"
+                              }`}
+                            >
+                              <RadioGroupItem value="good" id={`${id}-${subject.id}-good`} className="sr-only" />
+                              <span className="text-sm font-medium">得意</span>
+                            </Label>
+                            <Label
+                              htmlFor={`${id}-${subject.id}-normal`}
+                              className={`flex items-center justify-center p-3 rounded-lg border cursor-pointer transition-all ${
+                                answers[id]?.[subject.id] === "normal" 
+                                  ? "border-blue-500 bg-blue-50 text-blue-700" 
+                                  : "border-gray-300 hover:border-blue-400"
+                              }`}
+                            >
+                              <RadioGroupItem value="normal" id={`${id}-${subject.id}-normal`} className="sr-only" />
+                              <span className="text-sm font-medium">普通</span>
+                            </Label>
+                            <Label
+                              htmlFor={`${id}-${subject.id}-weak`}
+                              className={`flex items-center justify-center p-3 rounded-lg border cursor-pointer transition-all ${
+                                answers[id]?.[subject.id] === "weak" 
+                                  ? "border-orange-500 bg-orange-50 text-orange-700" 
+                                  : "border-gray-300 hover:border-orange-400"
+                              }`}
+                            >
+                              <RadioGroupItem value="weak" id={`${id}-${subject.id}-weak`} className="sr-only" />
+                              <span className="text-sm font-medium">苦手</span>
+                            </Label>
+                          </RadioGroup>
                         </div>
                       ))}
                     </div>
                   )}
+
+                  {question.type === "checkbox" && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {question.options.map((option) => (
+                        <Label
+                          key={option.id}
+                          htmlFor={`${id}-${option.id}`}
+                          className={`flex items-center space-x-3 rounded-lg border p-4 cursor-pointer transition-all hover:border-blue-500/80 ${
+                            (answers[id] || []).includes(option.id) ? "border-blue-500 ring-2 ring-blue-500/20 bg-blue-50" : "border-gray-300"
+                          }`}
+                        >
+                          <Checkbox
+                            id={`${id}-${option.id}`}
+                            checked={(answers[id] || []).includes(option.id)}
+                            onCheckedChange={(checked) => handleCheckboxChange(id, option.id, !!checked)}
+                            className="h-5 w-5 border-gray-400 text-blue-600 focus:ring-blue-500/50"
+                          />
+                          <span className="font-medium text-gray-700">{option.label}</span>
+                        </Label>
+                      ))}
+                    </div>
+                  )}
+
+                  {question.type === "environment" && (
+                    <div className="space-y-6">
+                      {question.items.map((item) => (
+                        <div key={item.id} className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <Label className="text-base font-medium text-gray-700">{item.label}</Label>
+                          </div>
+                          <RadioGroup
+                            value={answers[id]?.[item.id] || ""}
+                            onValueChange={(value) => handleEnvironmentChange(id, item.id, value)}
+                            className="grid grid-cols-4 gap-3"
+                          >
+                            <Label
+                              htmlFor={`${id}-${item.id}-very`}
+                              className={`flex items-center justify-center p-3 rounded-lg border cursor-pointer transition-all ${
+                                answers[id]?.[item.id] === "very" 
+                                  ? "border-indigo-500 bg-indigo-50 text-indigo-700" 
+                                  : "border-gray-300 hover:border-indigo-400"
+                              }`}
+                            >
+                              <RadioGroupItem value="very" id={`${id}-${item.id}-very`} className="sr-only" />
+                              <span className="text-sm font-medium">とても重視</span>
+                            </Label>
+                            <Label
+                              htmlFor={`${id}-${item.id}-somewhat`}
+                              className={`flex items-center justify-center p-3 rounded-lg border cursor-pointer transition-all ${
+                                answers[id]?.[item.id] === "somewhat" 
+                                  ? "border-blue-500 bg-blue-50 text-blue-700" 
+                                  : "border-gray-300 hover:border-blue-400"
+                              }`}
+                            >
+                              <RadioGroupItem value="somewhat" id={`${id}-${item.id}-somewhat`} className="sr-only" />
+                              <span className="text-sm font-medium">やや重視</span>
+                            </Label>
+                            <Label
+                              htmlFor={`${id}-${item.id}-neutral`}
+                              className={`flex items-center justify-center p-3 rounded-lg border cursor-pointer transition-all ${
+                                answers[id]?.[item.id] === "neutral" 
+                                  ? "border-gray-500 bg-gray-100 text-gray-700" 
+                                  : "border-gray-300 hover:border-gray-400"
+                              }`}
+                            >
+                              <RadioGroupItem value="neutral" id={`${id}-${item.id}-neutral`} className="sr-only" />
+                              <span className="text-sm font-medium">どちらでも</span>
+                            </Label>
+                            <Label
+                              htmlFor={`${id}-${item.id}-not`}
+                              className={`flex items-center justify-center p-3 rounded-lg border cursor-pointer transition-all ${
+                                answers[id]?.[item.id] === "not" 
+                                  ? "border-gray-400 bg-gray-50 text-gray-600" 
+                                  : "border-gray-300 hover:border-gray-400"
+                              }`}
+                            >
+                              <RadioGroupItem value="not" id={`${id}-${item.id}-not`} className="sr-only" />
+                              <span className="text-sm font-medium">重視しない</span>
+                            </Label>
+                          </RadioGroup>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {question.type === "number" && (
+                     <Input
+                        type="number"
+                        placeholder={question.placeholder}
+                        value={answers[id] || ""}
+                        onChange={(e) => handleNumberChange(id, e.target.value)}
+                        className="max-w-xs text-base p-4"
+                      />
+                  )}
                 </CardContent>
-                {id !== "environment" && <Separator className="my-0" />}
+                {id !== structuredQuestionKeys[structuredQuestionKeys.length - 1] && <Separator className="my-0" />}
               </Card>
             </motion.div>
           )
@@ -352,9 +597,9 @@ export default function DiagnosisPage() {
     const question = freeformQuestionData
     return (
       <Card className="shadow-lg border-gray-200 rounded-xl overflow-hidden">
-        <CardHeader className="bg-gray-50 p-6">
+        <CardHeader className="bg-gradient-to-r from-gray-50 to-purple-50 p-6">
           <div className="flex items-center gap-3">
-            <Sparkles className="h-6 w-6 text-theme-accent" />
+            <Sparkles className="h-6 w-6 text-purple-600" />
             <div>
               <CardTitle className="text-xl font-semibold text-gray-800">{question.title}</CardTitle>
               {question.description && <CardDescription className="text-sm text-gray-600 mt-1">{question.description}</CardDescription>}
@@ -367,7 +612,7 @@ export default function DiagnosisPage() {
             onChange={handleFreeformChange}
             placeholder={question.placeholder}
             rows={8}
-            className="resize-none rounded-lg border-gray-300 focus:border-theme-accent focus:ring-theme-accent/50 text-base p-4"
+            className="resize-none rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500/50 text-base p-4"
           />
           <p className="text-xs text-gray-500 mt-2 text-right">{freeformText.length} / 500 文字 (20文字以上で診断可能)</p>
         </CardContent>
@@ -381,7 +626,7 @@ export default function DiagnosisPage() {
         <div className="text-center space-y-4 p-8 bg-red-50 border border-red-200 rounded-lg">
           <h2 className="text-2xl font-bold text-red-700">エラーが発生しました</h2>
           <p className="text-red-600">{error}</p>
-          <Button onClick={handleRestart}>もう一度試す</Button>
+          <Button onClick={handleRestart} className="bg-red-600 hover:bg-red-700 text-white">もう一度試す</Button>
         </div>
       )
     }
@@ -391,7 +636,7 @@ export default function DiagnosisPage() {
         <div className="text-center space-y-4 p-8 bg-yellow-50 border border-yellow-200 rounded-lg">
           <h2 className="text-2xl font-bold text-yellow-800">診断結果が見つかりませんでした</h2>
           <p className="text-yellow-700">条件に合う高専が見つからなかったようです。回答を変えてもう一度お試しください。</p>
-          <Button onClick={handleRestart}>もう一度診断する</Button>
+          <Button onClick={handleRestart} className="bg-yellow-600 hover:bg-yellow-700 text-white">もう一度診断する</Button>
         </div>
       )
     }
@@ -419,16 +664,20 @@ export default function DiagnosisPage() {
               transition={{ duration: 0.5, delay: index * 0.1, ease: "easeOut" }}
             >
               <Card 
-                className={`shadow-xl border rounded-2xl overflow-hidden transition-all duration-300 ease-in-out transform hover:scale-[1.02] bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm ${index === 0 ? `border-theme-primary ring-2 ring-theme-primary/30 dark:border-sky-500 dark:ring-sky-500/30` : `border-gray-200 dark:border-slate-700`}`}>
+                className={`shadow-xl border rounded-2xl overflow-hidden transition-all duration-300 ease-in-out transform hover:scale-[1.02] bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm ${
+                  index === 0 
+                    ? `border-blue-500 ring-2 ring-blue-500/30 dark:border-sky-500 dark:ring-sky-500/30` 
+                    : `border-gray-200 dark:border-slate-700`
+                }`}>
                 {index === 0 && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-theme-primary to-theme-secondary text-white px-5 py-1.5 rounded-full text-sm font-semibold shadow-lg z-10">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-5 py-1.5 rounded-full text-sm font-semibold shadow-lg z-10">
                     <Sparkles className="inline-block h-4 w-4 mr-1.5 -mt-0.5" /> 最適なマッチ
                   </div>
                 )}
                 <CardContent className="p-6 md:p-8 relative">
                   {index === 0 && <div className="h-4"></div>}
-                  <div className="grid md:grid-cols-[200px_1fr] gap-6 items-center">
-                    <div className="relative w-full h-48 md:h-full rounded-lg overflow-hidden shadow-md aspect-square md:aspect-auto">
+                  <div className="grid md:grid-cols-[200px_1fr] gap-6 items-start">
+                    <div className="relative w-full aspect-video md:aspect-auto md:h-full rounded-lg overflow-hidden shadow-md">
                       <Image
                         src={result.imageUrl || "/placeholder.svg"}
                         alt={result.name}
@@ -440,7 +689,9 @@ export default function DiagnosisPage() {
                     <div className="space-y-3">
                       <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
                         <div>
-                          <CardTitle className={`text-2xl font-bold tracking-tight ${index === 0 ? 'text-theme-primary dark:text-sky-400' : 'text-gray-800 dark:text-white'}`}>{result.name}</CardTitle>
+                          <CardTitle className={`text-2xl font-bold tracking-tight ${
+                            index === 0 ? 'text-blue-600 dark:text-sky-400' : 'text-gray-800 dark:text-white'
+                          }`}>{result.name}</CardTitle>
                           <CardDescription className="flex items-center gap-1.5 mt-1 text-sm text-gray-600 dark:text-slate-400">
                             <MapPin className="h-4 w-4" /> {result.location}
                           </CardDescription>
@@ -449,13 +700,17 @@ export default function DiagnosisPage() {
                           <div className="relative w-20 h-20">
                             <svg className="w-full h-full" viewBox="0 0 36 36">
                               <path
-                                className={`stroke-current ${index === 0 ? 'text-theme-primary/20 dark:text-sky-400/20' : 'text-gray-300/50 dark:text-slate-600'}`}                              
+                                className={`stroke-current ${
+                                  index === 0 ? 'text-blue-500/20 dark:text-sky-400/20' : 'text-gray-300/50 dark:text-slate-600'
+                                }`}                              
                                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                                 fill="none"
                                 strokeWidth="3"
                               />
                               <path
-                                className={`stroke-current ${index === 0 ? 'text-theme-primary dark:text-sky-400' : 'text-gray-500 dark:text-slate-400'}`}
+                                className={`stroke-current ${
+                                  index === 0 ? 'text-blue-600 dark:text-sky-400' : 'text-gray-500 dark:text-slate-400'
+                                }`}
                                 strokeDasharray={`${result.matchRate}, 100`}
                                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                                 fill="none"
@@ -464,7 +719,9 @@ export default function DiagnosisPage() {
                               />
                             </svg>
                             <div className="absolute inset-0 flex items-center justify-center">
-                              <span className={`text-xl font-bold ${index === 0 ? 'text-theme-primary dark:text-sky-400' : 'text-gray-700 dark:text-slate-200'}`}>{result.matchRate}<span className="text-xs">%</span></span>
+                              <span className={`text-xl font-bold ${
+                                index === 0 ? 'text-blue-600 dark:text-sky-400' : 'text-gray-700 dark:text-slate-200'
+                              }`}>{result.matchRate}<span className="text-xs">%</span></span>
                             </div>
                           </div>
                           <p className="text-xs font-medium mt-1 text-gray-500 dark:text-slate-400">マッチ度</p>
@@ -472,7 +729,9 @@ export default function DiagnosisPage() {
                       </div>
                       
                       <div>
-                        <h3 className={`font-semibold text-lg ${index === 0 ? 'text-theme-primary dark:text-sky-400' : 'text-gray-700 dark:text-slate-200'}`}>{result.departments?.join(', ') || '学科情報なし'}</h3>
+                        <h3 className={`font-semibold text-lg ${
+                          index === 0 ? 'text-blue-600 dark:text-sky-400' : 'text-gray-700 dark:text-slate-200'
+                        }`}>{result.departments?.join(', ') || '学科情報なし'}</h3>
                         <p className="text-sm text-gray-600 dark:text-slate-300 mt-1 leading-relaxed">{result.matchReason}</p>
                       </div>
                       <div>
@@ -486,11 +745,17 @@ export default function DiagnosisPage() {
                   <Button
                     asChild
                     size="lg"
-                    className={`w-full font-semibold py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 ease-in-out flex items-center gap-2 group ${index === 0 ? 'bg-gradient-to-r from-theme-primary to-theme-secondary hover:from-theme-primary/90 hover:to-theme-secondary/90 text-white' : 'bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-600'}`}
+                    className={`w-full font-semibold py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 ease-in-out flex items-center gap-2 group ${
+                      index === 0 
+                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/40' 
+                        : 'bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-600 hover:border-gray-400'
+                    }`}
                     variant={index === 0 ? "default" : "outline"}
                   >
                     <Link href={`/find-kosen/${result.id}`}>
-                      詳細を見る <ArrowRight className={`ml-2 h-5 w-5 ${index === 0 ? 'group-hover:translate-x-1' : 'group-hover:translate-x-0.5'} transition-transform duration-200`} />
+                      詳細を見る <ArrowRight className={`ml-2 h-5 w-5 ${
+                        index === 0 ? 'group-hover:translate-x-1' : 'group-hover:translate-x-0.5'
+                      } transition-transform duration-200`} />
                     </Link>
                   </Button>
                 </CardFooter>
@@ -516,11 +781,11 @@ export default function DiagnosisPage() {
               onClick={handleRestart}
               variant="outline"
               size="lg"
-              className="font-semibold py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 ease-in-out border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-700 flex items-center gap-2 group"
+              className="font-semibold py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 ease-in-out border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700/80 flex items-center gap-2 group"
             >
               <ArrowRight className="mr-2 h-5 w-5 rotate-180 group-hover:-translate-x-1 transition-transform duration-200" /> もう一度診断する
             </Button>
-            <Button asChild size="lg" className="bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-700/90 hover:to-gray-800/90 text-white font-semibold py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 ease-in-out flex items-center gap-2 group">
+            <Button asChild size="lg" className="bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-700/90 hover:to-gray-900/90 text-white font-semibold py-3 rounded-lg shadow-md hover:shadow-lg hover:shadow-gray-700/30 transition-all duration-300 ease-in-out flex items-center gap-2 group">
               <Link href="/">トップページに戻る <Home className="ml-2 h-5 w-5 group-hover:scale-110 transition-transform duration-200" /></Link>
             </Button>
           </div>
@@ -532,7 +797,7 @@ export default function DiagnosisPage() {
   const progressValue = activeTab === "structured" ? (currentStep / structuredQuestionKeys.length) * 100 : (freeformText.length > 0 ? 100 : 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-sky-100 dark:from-slate-900 dark:to-sky-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-slate-900 dark:to-sky-900">
       <main className="container py-8 md:py-12">
         <AnimatePresence mode="wait">
           <motion.div
@@ -547,7 +812,7 @@ export default function DiagnosisPage() {
               <Card className="shadow-xl border-gray-200 rounded-2xl overflow-hidden bg-white/80 backdrop-blur-md dark:bg-slate-800/80 dark:border-slate-700">
                 <CardHeader className="border-b border-gray-200 dark:border-slate-700 p-6">
                   <div className="flex flex-col items-center text-center space-y-2">
-                    <Badge className="bg-theme-primary text-white px-4 py-1.5 text-sm font-semibold rounded-full shadow-md">無料診断</Badge>
+                    <Badge className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-1.5 text-sm font-semibold rounded-full shadow-md">無料診断</Badge>
                     <CardTitle className="text-3xl font-bold tracking-tight text-gray-800 dark:text-white">高専適性診断</CardTitle>
                     <CardDescription className="text-base text-gray-600 dark:text-slate-300 max-w-md">
                       あなたの興味や適性に合った高専を見つけるための診断です。以下の質問に答えてください。
@@ -559,20 +824,20 @@ export default function DiagnosisPage() {
                     <TabsList className="grid w-full grid-cols-2 mb-6 bg-gray-100 dark:bg-slate-700 rounded-lg p-1 shadow-inner">
                       <TabsTrigger
                         value="structured"
-                        className="py-2.5 text-sm font-medium data-[state=active]:bg-theme-primary data-[state=active]:text-white data-[state=active]:shadow-md rounded-md transition-all duration-200 ease-in-out dark:text-slate-300 dark:data-[state=active]:text-white"
+                        className="py-2.5 text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md rounded-md transition-all duration-200 ease-in-out dark:text-slate-300 dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-white"
                       >
                         選択式診断
                       </TabsTrigger>
                       <TabsTrigger
                         value="freeform"
-                        className="py-2.5 text-sm font-medium data-[state=active]:bg-theme-primary data-[state=active]:text-white data-[state=active]:shadow-md rounded-md transition-all duration-200 ease-in-out dark:text-slate-300 dark:data-[state=active]:text-white"
+                        className="py-2.5 text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-purple-600 data-[state=active]:shadow-md rounded-md transition-all duration-200 ease-in-out dark:text-slate-300 dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-white"
                       >
                         AI自由記述診断
                       </TabsTrigger>
                     </TabsList>
                     
                     <div className="mb-6 px-1">
-                      <Progress value={progressValue} className="w-full h-2.5 bg-gray-200 dark:bg-slate-700 [&>div]:bg-theme-primary transition-all duration-300 ease-in-out rounded-full" />
+                      <Progress value={progressValue} className="w-full h-2.5 bg-gray-200 dark:bg-slate-700 [&>div]:bg-gradient-to-r [&>div]:from-blue-600 [&>div]:to-indigo-600 transition-all duration-300 ease-in-out rounded-full" />
                       {activeTab === "structured" && (
                         <p className="text-xs text-gray-500 dark:text-slate-400 mt-1.5 text-right">ステップ {currentStep > structuredQuestionKeys.length ? structuredQuestionKeys.length : currentStep} / {structuredQuestionKeys.length}</p>
                       )}
@@ -591,7 +856,7 @@ export default function DiagnosisPage() {
                     onClick={handleSubmit}
                     disabled={isSubmitDisabled()}
                     size="lg"
-                    className="bg-gradient-to-r from-theme-primary to-theme-secondary hover:from-theme-primary/90 hover:to-theme-secondary/90 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 group"
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center gap-2 group"
                   >
                     診断結果を見る <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
                   </Button>
@@ -603,7 +868,7 @@ export default function DiagnosisPage() {
                   <div className="relative w-24 h-24">
                     <AnimatePresence>
                       <motion.div
-                        key={analyzingStep % 5} // アイコンを切り替えるキー
+                        key={analyzingStep % 6} // アイコンを切り替えるキー
                         initial={{ opacity: 0, scale: 0.5, rotate: -90 }}
                         animate={{ opacity: 1, scale: 1, rotate: 0 }}
                         exit={{ opacity: 0, scale: 0.5, rotate: 90 }}
@@ -611,20 +876,21 @@ export default function DiagnosisPage() {
                         className="absolute inset-0 flex items-center justify-center"
                       >
                         {[
-                          <BookOpen key="book" className="h-12 w-12 text-theme-primary" />,
-                          <Brain key="brain" className="h-12 w-12 text-theme-secondary" />,
-                          <Briefcase key="brief" className="h-12 w-12 text-theme-accent" />,
-                          <Users key="users" className="h-12 w-12 text-theme-primary" />,
-                          <MapPin key="map" className="h-12 w-12 text-theme-secondary" />,
-                        ][analyzingStep % 5]}
+                          <BookOpen key="book" className="h-12 w-12 text-blue-600" />,
+                          <PenLine key="deviation" className="h-12 w-12 text-cyan-600" />,
+                          <Brain key="brain" className="h-12 w-12 text-purple-600" />,
+                          <Target key="target" className="h-12 w-12 text-green-600" />,
+                          <Users key="users" className="h-12 w-12 text-orange-600" />,
+                          <MapPin key="map" className="h-12 w-12 text-teal-600" />,
+                        ][analyzingStep % 6]}
                       </motion.div>
                     </AnimatePresence>
                   </div>
-                  <CardTitle className="text-2xl font-semibold text-theme-primary dark:text-sky-400">AIが診断中...</CardTitle>
+                  <CardTitle className="text-2xl font-semibold text-blue-600 dark:text-sky-400">AIが診断中...</CardTitle>
                   <CardDescription className="text-base text-gray-600 dark:text-slate-300 max-w-sm">
                     あなたの回答を丁寧に分析し、あなたにピッタリの高専を見つけるお手伝いをしています。もう少々お待ちください。
                   </CardDescription>
-                  <Progress value={progress} className="w-full max-w-xs h-2 mt-2 bg-gray-200 dark:bg-slate-700 [&>div]:bg-theme-primary rounded-full transition-all duration-300" />
+                  <Progress value={progress} className="w-full max-w-xs h-2 mt-2 bg-gray-200 dark:bg-slate-700 [&>div]:bg-gradient-to-r [&>div]:from-blue-600 [&>div]:to-indigo-600 rounded-full transition-all duration-300" />
                 </div>
               </Card>
             ) : (

@@ -12,7 +12,7 @@ import { ImageUploadForm } from '@/components/kosen-image-upload-form';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ImagePreviewModal } from '@/components/image-preview-modal';
 import { useToast } from '@/components/ui/use-toast';
-import { kosenList as kosenData } from '@/lib/kosen-data';
+import { kosenList } from '@/lib/kosen-data';
 import { Kosen } from '@/types/kosen';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -39,7 +39,7 @@ interface GalleryImage {
 }
 
 const findKosenById = (id: string): Kosen | undefined => {
-    return kosenData.find((k: Kosen) => k.id === id);
+    return kosenList.find((k: Kosen) => k.id === id);
 };
 
 export default function KosenDetailPage() {
@@ -319,7 +319,7 @@ export default function KosenDetailPage() {
                     </div>
                     <CardDescription className="flex items-center pt-1 text-sm">
                       <MapPin className="mr-1.5 h-4 w-4 text-muted-foreground" />
-                      {kosen.location}
+                      {kosen.region} - {kosen.campus}
                     </CardDescription>
                   </CardHeader>
                   {user?.role === 'admin' && (
@@ -482,10 +482,6 @@ export default function KosenDetailPage() {
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="name" className="text-right">学校名</Label>
                   <Input id="name" value={editableKosen.name} onChange={(e) => setEditableKosen({...editableKosen, name: e.target.value})} className="col-span-3" />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="location" className="text-right">所在地</Label>
-                  <Input id="location" value={editableKosen.location} onChange={(e) => setEditableKosen({...editableKosen, location: e.target.value})} className="col-span-3" />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="website" className="text-right">ウェブサイト</Label>

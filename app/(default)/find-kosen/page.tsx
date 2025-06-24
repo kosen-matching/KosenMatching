@@ -5,37 +5,23 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"; // Inputコンポーネントをインポート
 import Link from "next/link";
+import Image from 'next/image'; // Imageコンポーネントをインポート
 import { MapPin, ExternalLink, BookOpen, Search, Info } from "lucide-react"; // アイコン追加
 import { kosenList } from "@/lib/kosen-data";
 import { Kosen } from "@/types/kosen"; // kosenList と Kosen をインポート (kosenListFull -> kosenList, KosenData -> Kosen)
-import Image from "next/image"; // next/image をインポート
-
-// 更新された高専データインターフェース
-// interface Kosen { // Kosenインターフェースを削除 (Kosenを使用するため)
-//   id: string;
-//   name: string;
-//   location: string; // 例: 北海道函館市
-//   website: string;
-//   departments?: string[]; // 設置学科リスト (任意)
-//   description?: string;   // 特色・概要 (任意)
-// }
-
-// 全国の高専データ (一部に詳細情報を追加)
-// const kosenList: Kosen[] = [ // ハードコードされたkosenListを削除
-// ... (省略) ...
-// ];
-
-// 国立高専のみをフィルタリング
-const nationalKosenList: Kosen[] = kosenList.filter((kosen: Kosen) => kosen.type === '国立'); // 型をKosenに、引数に型注釈
 
 export default function FindKosenPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredKosenList, setFilteredKosenList] = useState<Kosen[]>(nationalKosenList); // 初期値を国立高専リストに変更、型をKosenに
+  const [filteredKosenList, setFilteredKosenList] = useState<Kosen[]>(kosenList);
 
   useEffect(() => {
-    const results = nationalKosenList.filter((kosen: Kosen) => // フィルタリング対象を国立高専リストに変更、引数に型注釈
-      kosen.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      kosen.location.toLowerCase().includes(searchTerm.toLowerCase())
+    const results = kosenList.filter(
+      (kosen: Kosen) =>
+        kosen.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        kosen.yomi.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        kosen.region.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        kosen.campus.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        kosen.type.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredKosenList(results);
   }, [searchTerm]);
@@ -70,31 +56,33 @@ export default function FindKosenPage() {
           {filteredKosenList.length > 0 ? (
             <div className="max-w-3xl mx-auto space-y-6">
               {filteredKosenList.map((kosen) => (
-                <Card key={kosen.id} className="flex flex-col elegant-card hover:shadow-lg transition-shadow w-full">
-                  {/* 画像表示部分を追加 */}
+                <Card key={kosen.id} className="flex flex-col elegant-card hover:shadow-lg transition-shadow w-full overflow-hidden">
                   {kosen.imageUrl && (
-                    <div className="relative w-full h-48 overflow-hidden rounded-t-lg"> {/* 画像コンテナのサイズ調整、overflow-hidden追加 */}
+                    <div className="relative w-full h-48">
                       <Image
                         src={kosen.imageUrl}
-                        alt={`${kosen.name}の外観・ロゴ等`} // altテキストを汎用的に
+                        alt={`${kosen.name}の画像`}
                         fill
                         className="object-cover"
                       />
-                      {/* 画像クレジット表示 */}
                       {kosen.imageCreditText && kosen.imageCreditUrl && (
-                        <div className="absolute bottom-1 right-1 bg-black bg-opacity-50 text-white text-xs p-1 rounded">
-                          <a href={kosen.imageCreditUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                            {kosen.imageCreditText}
-                          </a>
-                        </div>
+                        <a 
+                          href={kosen.imageCreditUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="absolute bottom-1 right-1 bg-black bg-opacity-60 text-white text-xs px-1.5 py-0.5 rounded transition-colors hover:bg-opacity-80"
+                          onClick={(e) => e.stopPropagation()} // カードクリックの伝播を停止
+                        >
+                          {kosen.imageCreditText}
+                        </a>
                       )}
                     </div>
                   )}
                   <CardHeader>
-                    <CardTitle className="text-xl font-semibold">{kosen.name}</CardTitle>
+                    <CardTitle className="text-xl font-semibold">{kosen.name} <span className="text-base font-medium text-muted-foreground">({kosen.type})</span></CardTitle>
                     <CardDescription className="flex items-center pt-1 text-base">
                       <MapPin className="mr-1.5 h-5 w-5 text-muted-foreground" />
-                      {kosen.location}
+                      {kosen.region} - {kosen.campus}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="flex-grow space-y-4"> {/* space-yを追加 */} 
