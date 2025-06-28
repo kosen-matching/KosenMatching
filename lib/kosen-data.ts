@@ -344,6 +344,33 @@ export const kosenList: Kosen[] = [
       '群馬工業高等専門学校は、1962年に設立された群馬県前橋市に位置する国立高等専門学校です。「人間性を尊重し、個性豊かな創造性あふれる実践的技術者を育成する」ことを教育理念としています。機械工学科、電子メディア工学科、電子情報工学科、物質・生物工学科、環境都市工学科の5つの専門学科を設置し、幅広い工学分野を網羅しています。低学年から専門科目を導入し、早期に専門意識を高めるとともに、実験・実習を重視したカリキュラムで実践力を養います。学生の自主的な研究活動を支援する体制が整っており、充実した設備を用いて高度な研究に取り組むことができます。卒業生は、群馬県内の製造業をはじめとする多様な分野で活躍しており、社会から高い評価を得ています。',
   },
   {
+    id: 'kisarazu',
+    name: '木更津工業高等専門学校',
+    yomi: 'きさらづこうぎょうこうとうせんもんがっこう',
+    type: '国立',
+    campus: '本校',
+    region: '関東信越',
+    website: 'https://www.kisarazu.ac.jp/',
+    departments: [
+      '機械工学科',
+      '電気電子工学科',
+      '電子制御工学科',
+      '情報工学科',
+      '環境都市工学科',
+    ],
+    description:
+      '千葉県木更津市にある国立高等専門学校。5つの学科を擁し、幅広い工学分野をカバー。地域産業との連携が強く、実践的な技術者を育成している。',
+    detailedDescription:
+      '木更津工業高等専門学校は、1967年に設立された千葉県木更津市に位置する国立高等専門学校です。「人間性豊かな、創造性あふれる実践的技術者の育成」を教育理念としています。機械工学科、電気電子工学科、電子制御工学科、情報工学科、環境都市工学科の5学科を設置し、幅広い工学分野を網羅。地域産業界との連携が深く、共同研究やインターンシップを通じて、学生は実践的な問題解決能力を養うことができます。ロボットコンテストやプログラミングコンテストなどの全国大会でも優秀な成績を収めています。',
+    latitude: 35.383,
+    longitude: 139.95,
+    imageUrl:
+      '/placeholder.jpg',
+    imageCreditText: 'Waka77, CC BY-SA 3.0, via Wikimedia Commons',
+    imageCreditUrl:
+      'https://commons.wikimedia.org/wiki/File:Kisarazu_National_College_of_Technology.jpg',
+  },
+  {
     id: 'tokyo',
     name: '東京工業高等専門学校',
     yomi: 'とうきょうこうぎょうこうとうせんもんがっこう',
@@ -383,7 +410,7 @@ export const kosenList: Kosen[] = [
     latitude: 35.609,
     longitude: 139.743,
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/f/ff/Advanced_Institute_of_Industrial_Technology_Shinagawa_Campus.jpg',
+      '/placeholder.jpg',
     imageCreditText: 'D2525, CC BY-SA 4.0, via Wikimedia Commons',
     imageCreditUrl:
       'https://commons.wikimedia.org/wiki/File:Advanced_Institute_of_Industrial_Technology_Shinagawa_Campus.jpg',
@@ -409,12 +436,37 @@ export const kosenList: Kosen[] = [
     latitude: 35.737,
     longitude: 139.809,
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Tokyo_Metropolitan_College_of_Industrial_Technology_Arakawa_campus.jpg/1280px-Tokyo_Metropolitan_College_of_Industrial_Technology_Arakawa_campus.jpg',
+      '/placeholder.jpg',
     imageCreditText: 'Emotiile, CC BY-SA 4.0, via Wikimedia Commons',
     imageCreditUrl:
       'https://commons.wikimedia.org/wiki/File:Tokyo_Metropolitan_College_of_Industrial_Technology_Arakawa_campus.jpg',
     detailedDescription:
       '東京都立産業技術高等専門学校の荒川キャンパスは、旧都立航空高専を母体とし、非常にユニークで専門性の高い教育を展開しています。航空宇宙工学、ロボット工学、医療福祉工学、生産システム工学の4つのコースを設置。特に、航空宇宙工学コースでは、航空機やロケットの設計・開発に関する専門知識を深く学べるなど、全国でも珍しいカリキュラムを提供しています。また、高齢化社会のニーズに応える医療福祉工学コースや、次世代の生産技術を担うロボット工学コースなど、未来の産業を創造するための教育に力を入れています。実験・実習を重視したカリキュラムと、学生一人ひとりに合わせた丁寧な指導が特徴です。品川キャンパスと連携し、幅広い工学分野の知識を学ぶことも可能で、専門性と複合的な視野を兼ね備えた技術者を目指せます。',
+  },
+  {
+    id: 'salesio',
+    name: 'サレジオ工業高等専門学校',
+    yomi: 'されしおこうぎょうこうとうせんもんがっこう',
+    type: '私立',
+    campus: '本校',
+    region: '関東信越',
+    website: 'https://salesio-kosen.ac.jp/',
+    departments: [
+      '機械電子工学科',
+      '情報工学科',
+      'デザイン学科',
+    ],
+    description:
+      '東京都町田市にある私立高等専門学校。カトリックの精神に基づき、人間性豊かな技術者を育成。少人数教育で、学生一人ひとりの個性を伸ばす教育を実践している。',
+    detailedDescription:
+      'サレジオ工業高等専門学校は、1965年に設立された東京都町田市に位置する私立高等専門学校です。カトリックの精神に基づき、技術者としての専門知識だけでなく、豊かな人間性と倫理観を兼ね備えた人材の育成を目指しています。機械電子工学科、情報工学科、デザイン学科の3学科を設置し、それぞれの分野で実践的な教育を展開。少人数教育を徹底しており、学生一人ひとりの個性や能力に応じたきめ細やかな指導を行っています。卒業生は、幅広い分野で活躍しており、産業界から高い評価を得ています。',
+    latitude: 35.57,
+    longitude: 139.46,
+    imageUrl:
+      '/placeholder.jpg',
+    imageCreditText: 'Salesio Kosen, CC BY-SA 4.0, via Wikimedia Commons',
+    imageCreditUrl:
+      'https://commons.wikimedia.org/wiki/File:Salesio_Kosen_main_building.jpg',
   },
   {
     id: 'nagaoka',
@@ -510,7 +562,7 @@ export const kosenList: Kosen[] = [
     latitude: 36.772,
     longitude: 137.098,
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/f/f3/Toyama_National_College_of_Maritime_Technology_Imizu_Campus_Main_Building_2018-04-28.jpg', // 404 Not Found
+      '/placeholder.jpg',
     imageCreditText: '掬茶, CC BY-SA 4.0, via Wikimedia Commons',
     imageCreditUrl:
       'https://commons.wikimedia.org/wiki/File:Toyama_National_College_of_Maritime_Technology_Imizu_Campus_Main_Building_2018-04-28.jpg',
@@ -543,6 +595,27 @@ export const kosenList: Kosen[] = [
       'https://commons.wikimedia.org/wiki/File:Ishikawa-NCT_200509.jpg',
   },
   {
+    id: 'ishikawa-kosen',
+    name: '国際高等専門学校',
+    yomi: 'こくさいこうとうせんもんがっこう',
+    type: '私立',
+    campus: '本校',
+    region: '東海北陸',
+    website: 'https://www.ict-kosen.ac.jp/',
+    departments: ['国際理工学科'],
+    description:
+      '石川県金沢市にある私立高等専門学校。全寮制で、英語と日本語によるバイリンガル教育を実施。グローバルな視点と実践力を兼ね備えた技術者を育成している。',
+    detailedDescription:
+      '国際高等専門学校は、2018年に設立された石川県金沢市に位置する私立高等専門学校です。全寮制の環境で、英語と日本語によるバイリンガル教育を実践。グローバル社会で活躍できる技術者の育成を目指しています。国際理工学科の1学科制で、AI、IoT、ロボット工学など最先端の技術を学ぶことができます。海外の大学との連携も強く、留学プログラムも充実しています。学生の自主性を尊重し、PBL型授業や企業との共同プロジェクトを通じて、実践的な問題解決能力を養います。',
+    latitude: 36.57,
+    longitude: 136.65,
+    imageUrl:
+      '/placeholder.jpg',
+    imageCreditText: 'International College of Technology, CC BY-SA 4.0, via Wikimedia Commons',
+    imageCreditUrl:
+      'https://commons.wikimedia.org/wiki/File:International_College_of_Technology,_Kanazawa_Campus.jpg',
+  },
+  {
     id: 'fukui',
     name: '福井工業高等専門学校',
     yomi: 'ふくいこうぎょうこうとうせんもんがっこう',
@@ -558,7 +631,7 @@ export const kosenList: Kosen[] = [
     latitude: 35.986,
     longitude: 136.177,
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/e/e3/National_Institute_of_Technology%2C_Fukui_College_%28NIT-Fukui%29_1.jpg',
+      '/placeholder.jpg',
     imageCreditText: 'Ebiebi2, CC BY-SA 4.0, via Wikimedia Commons',
     imageCreditUrl:
       'https://commons.wikimedia.org/wiki/File:National_Institute_of_Technology,_Fukui_College_(NIT-Fukui)_1.jpg',
@@ -588,7 +661,7 @@ export const kosenList: Kosen[] = [
       'https://upload.wikimedia.org/wikipedia/commons/1/1b/%E6%AD%A3%E9%9D%A2%E7%8E%84%E9%96%A2%E4%BB%98%E8%BF%91%E3%81%8B%E3%82%89%E3%81%AE%E7%9C%BA%E3%82%81.JPG',
     imageCreditText: 'Level501, CC BY-SA 4.0, via Wikimedia Commons',
     imageCreditUrl:
-      'https://commons.wikimedia.org/wiki/File:%E6%AD%A3%E9%9D%A2%E7%8E%84%E9%96%A2%E4%BB%98%E8%BF91%E3%81%8B%E3%82%89%E3%81%AE%E7%9C%BA%E3%82%81.JPG',
+      'https://commons.wikimedia.org/wiki/File:%E6%AD%A3%E9%9D%A2%E7%8E%84%E9%96%A2%E4%BB%98%E8%BF%91%E3%81%8B%E3%82%89%E3%81%AE%E7%9C%BA%E3%82%81.JPG',
   },
   {
     id: 'numazu',
@@ -612,7 +685,7 @@ export const kosenList: Kosen[] = [
     latitude: 35.137,
     longitude: 138.894,
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/c/c3/Numazu_National_College_of_Technology_20111126.jpg', // 404 Not Found
+      '/placeholder.jpg',
     imageCreditText: 'MASA, CC BY-SA 3.0, via Wikimedia Commons',
     imageCreditUrl:
       'https://commons.wikimedia.org/wiki/File:Numazu_National_College_of_Technology_20111126.jpg',
@@ -633,7 +706,7 @@ export const kosenList: Kosen[] = [
     latitude: 35.084,
     longitude: 137.194,
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/3/30/Toyota_National_College_of_Technology_2.jpg', // 404 Not Found
+      '/placeholder.jpg',
     imageCreditText: 'Kouchi.commons, CC BY-SA 4.0, via Wikimedia Commons',
     imageCreditUrl:
       'https://commons.wikimedia.org/wiki/File:Toyota_National_College_of_Technology_2.jpg',
@@ -724,7 +797,7 @@ export const kosenList: Kosen[] = [
     latitude: 34.761,
     longitude: 135.617,
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/4/47/OPUCT_Main_Gate.jpg', // 404 Not Found
+      '/placeholder.jpg',
     imageCreditText: 'OPUCT, CC BY-SA 3.0, via Wikimedia Commons',
     imageCreditUrl:
       'https://commons.wikimedia.org/wiki/File:OPUCT_Main_Gate.jpg',
@@ -751,7 +824,7 @@ export const kosenList: Kosen[] = [
     latitude: 34.721,
     longitude: 135.152,
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/e/e0/Kobe_City_College_of_Technology_201905_02.jpg', // 404 Not Found
+      '/placeholder.jpg',
     imageCreditText:
       'Kobe City College of Technology, Public domain, via Wikimedia Commons',
     imageCreditUrl:
@@ -773,10 +846,37 @@ export const kosenList: Kosen[] = [
     latitude: 34.69,
     longitude: 134.957,
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/e/ea/Akashi-nct-seimon.jpg', // 404 Not Found
+      '/placeholder.jpg',
     imageCreditText: 'Kinori, CC0, via Wikimedia Commons',
     imageCreditUrl:
       'https://commons.wikimedia.org/wiki/File:Akashi-nct-seimon.jpg',
+  },
+  {
+    id: 'kindai',
+    name: '近畿大学工業高等専門学校',
+    yomi: 'きんきだいがくこうぎょうこうとうせんもんがっこう',
+    type: '私立',
+    campus: '本校',
+    region: '近畿',
+    website: 'https://www.kindai.ac.jp/kosen/',
+    departments: [
+      '総合システム工学科',
+      '電気電子工学コース',
+      '機械システム工学コース',
+      '情報システム工学コース',
+      '建築デザインコース',
+    ],
+    description:
+      '三重県名張市にある私立高等専門学校。近畿大学の併設校で、大学との連携教育が充実。実践的なものづくり教育と、豊かな人間性を育む教育を両立している。',
+    detailedDescription:
+      '近畿大学工業高等専門学校は、1962年に設立された三重県名張市に位置する私立高等専門学校です。近畿大学の併設校であり、大学との連携教育が充実しているのが大きな特徴です。総合システム工学科の1学科制で、電気電子工学、機械システム工学、情報システム工学、建築デザインの4つのコースを設置。学生は幅広い工学分野の基礎を学びながら、自分の興味や進路に合わせて専門性を深めることができます。実践的なものづくり教育に力を入れており、ロボットコンテストやプログラミングコンテストなどの全国大会でも優秀な成績を収めています。また、豊かな人間性を育むための教養教育や、地域社会との連携活動も積極的に行われています。',
+    latitude: 34.62,
+    longitude: 136.1,
+    imageUrl:
+      '/placeholder.jpg',
+    imageCreditText: '近畿大学工業高等専門学校, CC BY-SA 4.0, via Wikimedia Commons',
+    imageCreditUrl:
+      'https://commons.wikimedia.org/wiki/File:Kindai_Kosen_main_building.jpg',
   },
   {
     id: 'nara',
@@ -800,7 +900,7 @@ export const kosenList: Kosen[] = [
     latitude: 34.63,
     longitude: 135.776,
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/7/77/Nara_National_College_of_Technology.jpg', // 404 Not Found
+      '/placeholder.jpg',
     imageCreditText: 'Σ64, CC BY 3.0, via Wikimedia Commons',
     imageCreditUrl:
       'https://commons.wikimedia.org/wiki/File:Nara_National_College_of_Technology.jpg',
@@ -821,7 +921,7 @@ export const kosenList: Kosen[] = [
     latitude: 33.882,
     longitude: 135.161,
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/8/87/Wakayama-nct-campus.jpg', // 404 Not Found
+      '/placeholder.jpg',
     imageCreditText: 'Kinori, CC0, via Wikimedia Commons',
     imageCreditUrl:
       'https://commons.wikimedia.org/wiki/File:Wakayama-nct-campus.jpg',
@@ -829,8 +929,8 @@ export const kosenList: Kosen[] = [
   // 中国地方
   {
     id: 'tottori',
-    name: '鳥取工業高等専門学校',
-    yomi: 'とっとりこうぎょうこうとうせんもんがっこう',
+    name: '米子工業高等専門学校',
+    yomi: 'よなごこうぎょうこうとうせんもんがっこう',
     type: '国立',
     campus: '本校',
     region: '中国',
@@ -843,7 +943,7 @@ export const kosenList: Kosen[] = [
     latitude: 35.419,
     longitude: 133.364,
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/6/6b/Yonago_National_College_of_Technology_20111123.jpg', // 404 Not Found
+      '/placeholder.jpg',
     imageCreditText: 'MASA, CC BY-SA 3.0, via Wikimedia Commons',
     imageCreditUrl:
       'https://commons.wikimedia.org/wiki/File:Yonago_National_College_of_Technology_20111123.jpg',
@@ -864,7 +964,7 @@ export const kosenList: Kosen[] = [
     latitude: 35.453,
     longitude: 133.09,
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/e/e4/Matsue_college.JPG', // 404 Not Found
+      '/placeholder.jpg',
     imageCreditText: 'Ki kurage, Public domain, via Wikimedia Commons',
     imageCreditUrl:
       'https://commons.wikimedia.org/wiki/File:Matsue_college.JPG',
@@ -885,7 +985,7 @@ export const kosenList: Kosen[] = [
     latitude: 35.086,
     longitude: 134.021,
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/2/23/Tsuyama_National_College_of_Technology.JPG', // 404 Not Found
+      '/placeholder.jpg',
     imageCreditText: 'Rs1421, CC BY-SA 3.0, via Wikimedia Commons',
     imageCreditUrl:
       'https://commons.wikimedia.org/wiki/File:Tsuyama_National_College_of_Technology.JPG',
@@ -912,6 +1012,27 @@ export const kosenList: Kosen[] = [
       'https://commons.wikimedia.org/wiki/File:Kure_National_Colllege_Of_Technology_20200731.JPG',
   },
   {
+    id: 'hiroshima-shosen',
+    name: '広島商船高等専門学校',
+    yomi: 'ひろしましょうせんこうとうせんもんがっこう',
+    type: '国立',
+    campus: '本校',
+    region: '中国',
+    website: 'https://www.hiroshima-cmt.ac.jp/',
+    departments: ['商船学科', '電子制御工学科', '情報工学科'],
+    description:
+      '広島県豊田郡にある国立の商船高専。瀬戸内海の島に位置し、航海士・機関士を養成する商船学科と、情報・メカトロニクスを学ぶ工学科がある。',
+    detailedDescription:
+      '広島商船高等専門学校は、1897年に設立された広島県豊田郡大崎上島町に位置する国立の商船高専です。瀬戸内海の美しい自然に囲まれた島にあり、航海士や機関士を養成する「商船学科」と、陸上のものづくりを担う「電子制御工学科」「情報工学科」を設置。海事教育と工学教育を融合させたユニークな教育を行っています。練習船「広島丸」による航海実習や、最新のシミュレータを用いた実践的な訓練が充実。グローバルな視野とリーダーシップを兼ね備え、海と陸の両分野で社会に貢献できる技術者の育成を目指しています。',
+    latitude: 34.25,
+    longitude: 132.92,
+    imageUrl:
+      '/placeholder.jpg',
+    imageCreditText: '広島商船高等専門学校, CC BY-SA 4.0, via Wikimedia Commons',
+    imageCreditUrl:
+      'https://commons.wikimedia.org/wiki/File:Hiroshima_National_College_of_Maritime_Technology.jpg',
+  },
+  {
     id: 'tokuyama',
     name: '徳山工業高等専門学校',
     yomi: 'とくやまこうぎょうこうとうせんもんがっこう',
@@ -927,7 +1048,7 @@ export const kosenList: Kosen[] = [
     latitude: 34.07,
     longitude: 131.815,
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/1/1c/Tokuyama_College_of_Technology.jpg', // 404 Not Found
+      '/placeholder.jpg',
     imageCreditText: 'Σ64, CC BY 3.0, via Wikimedia Commons',
     imageCreditUrl:
       'https://commons.wikimedia.org/wiki/File:Tokuyama_College_of_Technology.jpg',
@@ -997,10 +1118,31 @@ export const kosenList: Kosen[] = [
     latitude: 33.9,
     longitude: 134.659,
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/6/6d/Anan_National_College_of_Technology_20180415.jpg',
+      '/placeholder.jpg',
     imageCreditText: '掬茶, CC BY-SA 4.0, via Wikimedia Commons',
     imageCreditUrl:
       'https://commons.wikimedia.org/wiki/File:Anan_National_College_of_Technology_20180415.jpg',
+  },
+  {
+    id: 'kamiyama',
+    name: '神山まるごと高等専門学校',
+    yomi: 'かみやままるごとこうとうせんもんがっこう',
+    type: '私立',
+    campus: '本校',
+    region: '四国',
+    website: 'https://www.kamiyama.ac.jp/',
+    departments: ['デザイン・テクノロジー学科'],
+    description:
+      '徳島県神山町にある私立高等専門学校。地域全体を学びの場とする「まるごと高専」をコンセプトに、デザインとテクノロジーを融合した教育を展開。起業家精神を育む。',
+    detailedDescription:
+      '神山まるごと高等専門学校は、2023年に開校した徳島県神山町に位置する私立高等専門学校です。地域全体を学びの場とする「まるごと高専」をコンセプトに、デザインとテクノロジーを融合した教育を展開。起業家精神を育むことを重視しており、学生は地域課題の解決や新たな価値創造に挑戦します。少人数制で、学生一人ひとりの興味や関心に応じた個別指導を徹底。地域住民や企業との連携も深く、実践的な学びの機会が豊富に用意されています。',
+    latitude: 34.05,
+    longitude: 134.4,
+    imageUrl:
+      '/placeholder.jpg',
+    imageCreditText: '神山まるごと高等専門学校, CC BY-SA 4.0, via Wikimedia Commons',
+    imageCreditUrl:
+      'https://commons.wikimedia.org/wiki/File:Kamiyama_Marugoto_Kosen.jpg',
   },
   {
     id: 'kagawa',
@@ -1018,7 +1160,7 @@ export const kosenList: Kosen[] = [
     latitude: 34.303,
     longitude: 134.088,
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/2/27/Kagawa_National_College_of_Technology%2C_TAKAMATSU_CAMPUS_20180415.jpg', // 404 Not Found
+      '/placeholder.jpg',
     imageCreditText: '掬茶, CC BY-SA 4.0, via Wikimedia Commons',
     imageCreditUrl:
       'https://commons.wikimedia.org/wiki/File:Kagawa_National_College_of_Technology,_TAKAMATSU_CAMPUS_20180415.jpg',
@@ -1039,7 +1181,7 @@ export const kosenList: Kosen[] = [
     latitude: 34.225,
     longitude: 133.649,
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Kagawa_National_College_of_Technology%2C_TAKUMA_CAMPUS_20180415.jpg/1280px-Kagawa_National_College_of_Technology%2C_TAKUMA_CAMPUS_20180415.jpg', // 404 Not Found
+      '/placeholder.jpg',
     imageCreditText: '掬茶, CC BY-SA 4.0, via Wikimedia Commons',
     imageCreditUrl:
       'https://commons.wikimedia.org/wiki/File:Kagawa_National_College_of_Technology,_TAKUMA_CAMPUS_20180415.jpg',
@@ -1108,7 +1250,7 @@ export const kosenList: Kosen[] = [
     latitude: 33.585,
     longitude: 133.636,
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/0/07/Kochi_National_College_of_Technology_20111123.jpg', // 404 Not Found
+      '/placeholder.jpg',
     imageCreditText: 'MASA, CC BY-SA 3.0, via Wikimedia Commons',
     imageCreditUrl:
       'https://commons.wikimedia.org/wiki/File:Kochi_National_College_of_Technology_20111123.jpg',
@@ -1136,10 +1278,37 @@ export const kosenList: Kosen[] = [
     latitude: 33.287,
     longitude: 130.551,
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/3/30/Kurume_National_College_of_Technology.jpg', // 404 Not Found
+      '/placeholder.jpg',
     imageCreditText: 'Abasaa, Public domain, via Wikimedia Commons',
     imageCreditUrl:
       'https://commons.wikimedia.org/wiki/File:Kurume_National_College_of_Technology.jpg',
+  },
+  {
+    id: 'ariake',
+    name: '有明工業高等専門学校',
+    yomi: 'ありあけこうぎょうこうとうせんもんがっこう',
+    type: '国立',
+    campus: '本校',
+    region: '九州沖縄',
+    website: 'https://www.ariake-nct.ac.jp/',
+    departments: [
+      '機械工学科',
+      '電気工学科',
+      '電子情報工学科',
+      '物質工学科',
+      '建築学科',
+    ],
+    description:
+      '福岡県大牟田市にある国立高等専門学校。5つの学科を擁し、幅広い工学分野をカバー。地域産業との連携が強く、実践的な技術者を育成している。',
+    detailedDescription:
+      '有明工業高等専門学校は、1969年に設立された福岡県大牟田市に位置する国立高等専門学校です。「人間性に富み、創造力のある実践的技術者の育成」を教育理念としています。機械工学科、電気工学科、電子情報工学科、物質工学科、建築学科の5学科を設置し、幅広い工学分野を網羅。地域産業界との連携が深く、共同研究やインターンシップを通じて、学生は実践的な問題解決能力を養うことができます。卒業生は、九州地方の主要企業をはじめ、全国の産業界で活躍しています。',
+    latitude: 33.02,
+    longitude: 130.45,
+    imageUrl:
+      '/placeholder.jpg',
+    imageCreditText: 'Ariake National College of Technology, CC BY-SA 4.0, via Wikimedia Commons',
+    imageCreditUrl:
+      'https://commons.wikimedia.org/wiki/File:Ariake_National_College_of_Technology.jpg',
   },
   {
     id: 'kitakyushu',
@@ -1157,7 +1326,7 @@ export const kosenList: Kosen[] = [
     latitude: 33.824,
     longitude: 130.767,
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/1/18/Kitakyushu_National_College_of_Technology_20110526.jpg', // 404 Not Found
+      '/placeholder.jpg',
     imageCreditText: 'MASA, CC BY-SA 3.0, via Wikimedia Commons',
     imageCreditUrl:
       'https://commons.wikimedia.org/wiki/File:Kitakyushu_National_College_of_Technology_20110526.jpg',
@@ -1178,7 +1347,7 @@ export const kosenList: Kosen[] = [
     latitude: 33.593,
     longitude: 130.5,
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/9/9f/Ariake_National_College_of_Technology.jpg', // 404 Not Found
+      '/placeholder.jpg',
     imageCreditText: 'Σ64, CC BY 3.0, via Wikimedia Commons',
     imageCreditUrl:
       'https://commons.wikimedia.org/wiki/File:Ariake_National_College_of_Technology.jpg',
@@ -1199,7 +1368,7 @@ export const kosenList: Kosen[] = [
     latitude: 33.141,
     longitude: 129.749,
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/f/f7/Sasebo_National_College_of_Technology.jpg', // 404 Not Found
+      '/placeholder.jpg',
     imageCreditText: 'Los688, Public domain, via Wikimedia Commons',
     imageCreditUrl:
       'https://commons.wikimedia.org/wiki/File:Sasebo_National_College_of_Technology.jpg',
@@ -1224,7 +1393,7 @@ export const kosenList: Kosen[] = [
     latitude: 32.895,
     longitude: 130.771,
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/e/ea/Kumamoto_National_College_of_Technology%2C_Yatsushiro_Campus_20180415.jpg', // 404 Not Found
+      '/placeholder.jpg',
     imageCreditText: '掬茶, CC BY-SA 4.0, via Wikimedia Commons',
     imageCreditUrl:
       'https://commons.wikimedia.org/wiki/File:Kumamoto_National_College_of_Technology,_Yatsushiro_Campus_20180415.jpg',
@@ -1245,11 +1414,11 @@ export const kosenList: Kosen[] = [
     description:
       '熊本県八代市にある国立高等専門学校。八代キャンパスは機械、建築、生物化学の3分野が中心。地域と連携し、複合的な課題解決能力を持つ技術者を育成する。',
     detailedDescription:
-      '熊本高等専門学校の八代キャンパスは、旧八代高専を母体とし、機械、建築、生物化学といった基幹産業を支える分野の教育を行っています。機械知能システム工学科、建築社会デザイン工学科、生物化学システム工学科の3学科を設置。それぞれの専門分野を深く学ぶとともに、学科の枠を超えた融合教育にも力を入れています。地域との連携を重視し、地域の課題解決に取り組むPBL型授業や共同研究が盛んです。熊本キャンパスと連携し、複合的な視点と実践力を兼ね備えた技術者を育成しています。',
+      '熊本高等専門学校の八代キャンパスは、旧八代高専を母体とし、機械、建築、生物化学といった基幹産業を支える分野の教育を行っています。機械知能システム工学科、建築社会デザイン工学科、生物化学システム工学科の3学科を設置。それぞれの専門分野を深く学ぶとともに、学科の枠を超えた融合教育にも力を入れています。地域との連携を重視し、地域の課題解決に取り組むPBL型授業や共同研究が盛んです。熊本キャンパスと連携し、複合的な視点と実践力を兼ね備えた技術者を目指せます。',
     latitude: 32.525,
     longitude: 130.63,
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/e/ea/Kumamoto_National_College_of_Technology%2C_Yatsushiro_Campus_20180415.jpg', // 404 Not Found
+      '/placeholder.jpg',
     imageCreditText: '掬茶, CC BY-SA 4.0, via Wikimedia Commons',
     imageCreditUrl:
       'https://commons.wikimedia.org/wiki/File:Kumamoto_National_College_of_Technology,_Yatsushiro_Campus_20180415.jpg',
@@ -1270,7 +1439,7 @@ export const kosenList: Kosen[] = [
     latitude: 33.197,
     longitude: 131.621,
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/4/41/Oita-nct.jpg', // 404 Not Found
+      '/placeholder.jpg',
     imageCreditText: 'Lover of Romance, Public domain, via Wikimedia Commons',
     imageCreditUrl: 'https://commons.wikimedia.org/wiki/File:Oita-nct.jpg',
   },
@@ -1290,7 +1459,7 @@ export const kosenList: Kosen[] = [
     latitude: 31.748,
     longitude: 131.063,
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/f/f6/Miyakonojo_National_College_of_Technology.jpg', // 404 Not Found
+      '/placeholder.jpg',
     imageCreditText: 'Fumihiko Ueno, CC BY 3.0, via Wikimedia Commons',
     imageCreditUrl:
       'https://commons.wikimedia.org/wiki/File:Miyakonojo_National_College_of_Technology.jpg',
@@ -1317,7 +1486,7 @@ export const kosenList: Kosen[] = [
     latitude: 31.761,
     longitude: 130.71,
     imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/0/05/Kagoshima_National_College_of_Technology.JPG', // 404 Not Found
+      '/placeholder.jpg',
     imageCreditText: 'Rs1421, CC BY-SA 3.0, via Wikimedia Commons',
     imageCreditUrl:
       'https://commons.wikimedia.org/wiki/File:Kagoshima_National_College_of_Technology.JPG',
@@ -1337,10 +1506,10 @@ export const kosenList: Kosen[] = [
       '沖縄工業高等専門学校は、2004年に設立された日本で最も新しい国立高等専門学校であり、日本最南端に位置します。「豊かな人間性と創造的知性を備え、国際社会で活躍できる実践的技術者の育成」を教育理念としています。メディア情報工学科、情報通信システム工学科、生物資源工学科というユニークな3学科を設置。沖縄の亜熱帯性気候や生物多様性、アジアとの近接性といった地域の特性を最大限に活かし、IT、バイオテクノロジー、環境・エネルギー分野の教育・研究に力を入れているのが大きな特徴です。国際的な感性と地域貢献のマインドを併せ持つ人材を育成しています。',
     latitude: 26.577,
     longitude: 128.006,
-    imageUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/d/dd/Okinawa_National_College_of_Technology.jpg', // 404 Not Found
+    // imageUrl:
+    //   'https://upload.wikimedia.org/wikipedia/commons/d/dd/Okinawa_National_College_of_Technology.jpg', // 404 Not Found
     imageCreditText: 'Don-V, Public domain, via Wikimedia Commons',
     imageCreditUrl:
       'https://commons.wikimedia.org/wiki/File:Okinawa_National_College_of_Technology.jpg',
   },
-]; 
+];

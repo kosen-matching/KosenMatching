@@ -33,7 +33,6 @@ export default function AccountSettingsDialog({ isOpen, onClose, user, onUpdateP
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
-  const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -43,12 +42,6 @@ export default function AccountSettingsDialog({ isOpen, onClose, user, onUpdateP
     setUsername(user.username);
     setEmail(user.email);
     setProfileImageUrl(user.profileImageUrl || '');
-    // Check if the user is an admin
-    if (process.env.NEXT_PUBLIC_ADMIN_EMAIL && user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
-      setIsAdmin(true);
-    } else {
-      setIsAdmin(false);
-    }
   }, [isOpen, user]); // isOpenとuserが変更されたら実行
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
@@ -290,12 +283,6 @@ export default function AccountSettingsDialog({ isOpen, onClose, user, onUpdateP
                 </form>
               </CardContent>
             </Card>
-
-            {isAdmin && (
-              <Button asChild variant="outline" className="w-full mt-4">
-                <Link href="/admin/dashboard">管理者ダッシュボードへ</Link>
-              </Button>
-            )}
 
             <Button
               variant="destructive"

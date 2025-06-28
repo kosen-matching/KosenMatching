@@ -29,7 +29,8 @@ export async function GET() {
     // Add role information based on admin email check
     const userWithRole = {
       ...user,
-      role: ADMIN_EMAIL && user.email === ADMIN_EMAIL ? 'admin' : 'user'
+      role: ADMIN_EMAIL && user.email === ADMIN_EMAIL ? 'admin' : 'user',
+      showModeratorWelcome: user.showModeratorWelcome
     };
 
     return NextResponse.json({ user: userWithRole }, { status: 200 });

@@ -6,11 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from "@/components/ui/skeleton";
-import { Star, MessageSquarePlus, Search, RotateCcw, SlidersHorizontal, ChevronDown } from 'lucide-react';
+import { Star, MessageSquarePlus, Search, RotateCcw, SlidersHorizontal, ChevronDown, MoreVertical } from 'lucide-react';
 import Link from 'next/link';
 import { kosenList } from '@/lib/kosen-data';
 import Image from 'next/image';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useToast } from "@/components/ui/use-toast";
+import { Toaster } from "@/components/ui/toaster";
 
 interface Review {
   _id: string;
@@ -125,11 +128,66 @@ const SearchFilters = () => {
   );
 };
 
+const ReportMenu = ({ reviewId }: { reviewId: string }) => {
+  const { toast } = useToast();
+
+  const handleReport = async () => {
+    if (!confirm('この体験談を不適切なコンテンツとして通報します。よろしいですか？')) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/reviews/${reviewId}/report`, {
+        method: 'POST',
+      });
+      
+      const data = await res.json();
+
+      if (res.ok) {
+        toast({
+          title: "通報が完了しました",
+          description: "ご協力ありがとうございます。管理者が内容を確認します。",
+        });
+      } else {
+        toast({
+          title: "エラー",
+          description: data.error || "通報に失敗しました。",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "エラー",
+        description: "通報中に予期せぬエラーが発生しました。",
+        variant: "destructive",
+      });
+    }
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2">
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={handleReport}>
+          通報する
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+
 const ReviewCard = ({ review }: { review: Review }) => (
   <Card className="shadow-md hover:shadow-lg transition-shadow duration-300 transform hover:-translate-y-1 flex flex-col rounded-lg border border-gray-200">
-    <CardHeader>
+    <CardHeader className="relative">
+      <div className="absolute top-2 right-2">
+        <ReportMenu reviewId={review._id} />
+      </div>
       <div className="flex justify-between items-start">
-        <div>
+        <div className="pr-8">
            <CardTitle className="text-xl font-semibold text-blue-700 hover:underline cursor-pointer">
             <Link href={`/reviews/${review._id}`} className="stretched-link">
               {review.title}
@@ -250,6 +308,7 @@ export default function ReviewsPage() {
       </section>
     }>
       <ReviewsPageContent />
+      <Toaster />
     </Suspense>
   );
 } 

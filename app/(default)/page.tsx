@@ -8,7 +8,7 @@ import PopularKosenSection from "@/components/landing/PopularKosenSection"
 import MeritSection from "@/components/landing/MeritSection"
 import ContactSection from "@/components/landing/ContactSection"
 
-export default function Home() {
+export default async function Home() {
   return (
     <>
       <HeroSection />
