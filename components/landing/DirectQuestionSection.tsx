@@ -1,48 +1,63 @@
 "use client"
 
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button"
 // import { Input } from "@/components/ui/input" // 一旦コメントアウト
 // import { Textarea } from "@/components/ui/textarea" // 一旦コメントアウト
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card" // Card関連を追加
-import { ExternalLink, MessageCircle, ThumbsUp, Search } from "lucide-react" // アイコンを追加
+import { ExternalLink, MessageCircle, ThumbsUp, Search, AlertTriangle, Loader2 } from "lucide-react" // アイコンを追加
 import Link from "next/link" // Linkコンポーネントを追加
+// import { IDirectQuestion } from "@/lib/models/directQuestion.model"; // Don't import server-side types
 
-// ダミーデータ
-const dummyQuestions = [
-  {
-    id: 1,
-    title: "〇〇高専の機械工学科の雰囲気について教えてください！",
-    content: "今年受験を考えている中3です。〇〇高専の機械工学科の普段の授業の雰囲気や、先生方の特徴、男女比などを在校生の方に伺いたいです。また、課題の量や難易度についても教えていただけると嬉しいです。よろしくお願いします！",
-    nickname: "高専気になるマン",
-    createdAt: "2時間前",
-    answersCount: 2,
-    isUrgent: true,
-    tags: ["機械工学科", "雰囲気", "〇〇高専"],
-  },
-  {
-    id: 2,
-    title: "高専から大学編入する際の勉強法について",
-    content: "現在高専の電気情報工学科3年生です。将来は旧帝大の工学部に編入したいと考えているのですが、いつ頃からどのような勉強を始めれば良いでしょうか？おすすめの参考書や勉強スケジュールなど、経験者の方がいらっしゃいましたらアドバイスをお願いします。",
-    nickname: "編入希望",
-    createdAt: "1日前",
-    answersCount: 5,
-    isUrgent: false,
-    tags: ["大学編入", "勉強法", "電気情報工学科"],
-  },
-  {
-    id: 3,
-    title: "女子でも高専の寮生活は楽しめますか？",
-    content: "来年、地方の国立高専に進学予定の女子です。親元を離れて寮生活になるのですが、女子が少ない高専の寮生活はどんな感じでしょうか？不安なことや、逆に楽しかったことなど、実体験を教えていただきたいです。",
-    nickname: "寮生活不安ちゃん",
-    createdAt: "3日前",
-    answersCount: 1,
-    isUrgent: false,
-    tags: ["寮生活", "女子", "学生生活"],
-  },
-];
+// Client-side type for a question. Dates and ObjectIds are strings after JSON serialization.
+interface Question {
+  _id: string;
+  title: string;
+  content: string;
+  nickname: string;
+  tags: string[];
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+  approvedAt?: string;
+  // answersCount is not yet implemented in the backend model
+  answersCount?: number; 
+}
 
 export default function DirectQuestionSection() {
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch('/api/direct-question');
+        if (!res.ok) {
+          throw new Error('質問の読み込みに失敗しました。');
+        }
+        const data = await res.json();
+        setQuestions(data);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchQuestions();
+  }, []);
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ja-JP', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
   return (
     <section className="w-full py-8 md:py-12 lg:py-16 bg-slate-50"> {/* 背景色を薄いグレーに */}
       <div className="container px-4 md:px-6">
@@ -86,21 +101,46 @@ export default function DirectQuestionSection() {
             </Button>
           </div>
 
-          {dummyQuestions.map((question) => (
-            <Card key={question.id} className="shadow-md hover:shadow-lg transition-shadow duration-200 rounded-lg border border-gray-200">
+          {loading && (
+            <div className="flex items-center justify-center p-10">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                <p className="ml-3 text-gray-600">質問を読み込んでいます...</p>
+            </div>
+          )}
+
+          {error && (
+            <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-md">
+                <div className="flex">
+                    <div className="flex-shrink-0">
+                        <AlertTriangle className="h-5 w-5 text-red-400" aria-hidden="true" />
+                    </div>
+                    <div className="ml-3">
+                        <p className="text-sm text-red-700">{error}</p>
+                    </div>
+                </div>
+            </div>
+          )}
+
+          {!loading && !error && questions.length === 0 && (
+             <div className="text-center py-12 border-2 border-dashed rounded-lg">
+                <MessageCircle className="mx-auto h-12 w-12 text-gray-400" />
+                <h2 className="mt-4 text-xl font-semibold text-gray-800">まだ質問がありません</h2>
+                <p className="mt-1 text-muted-foreground">最初の質問を投稿してみましょう！</p>
+              </div>
+          )}
+
+          {!loading && !error && questions.map((question) => (
+            <Card key={question._id} className="shadow-md hover:shadow-lg transition-shadow duration-200 rounded-lg border border-gray-200">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between mb-1">
                   <CardTitle className="text-xl font-semibold text-blue-700 hover:underline cursor-pointer">
-                    {/* <Link href={`/direct-question/${question.id}`}> */}
+                    {/* <Link href={`/direct-question/${question._id}`}> */}
                       {question.title}
                     {/* </Link> */}
                   </CardTitle>
-                  {question.isUrgent && (
-                    <Badge variant="destructive" className="bg-red-500 text-white">至急</Badge>
-                  )}
                 </div>
                 <p className="text-xs text-gray-500">
-                  投稿者: {question.nickname} - {question.createdAt}
+                  投稿者: {question.nickname} - {formatDate(question.createdAt)}
                 </p>
               </CardHeader>
               <CardContent className="pb-4">
@@ -118,7 +158,10 @@ export default function DirectQuestionSection() {
               <CardFooter className="flex justify-between items-center text-sm text-gray-600 bg-gray-50 py-3 px-5 rounded-b-lg">
                 <div className="flex items-center gap-1">
                   <MessageCircle className="h-4 w-4 text-blue-500" />
-                  <span>回答 {question.answersCount}件</span>
+                  
+                    {/* TODO: Implement answer count. */}
+                    <span>回答 {question.answersCount || 0}件</span>
+                  
                 </div>
                 <Button variant="ghost" size="sm" className="text-blue-600 hover:bg-blue-100 hover:text-blue-700">
                   回答する・詳細を見る

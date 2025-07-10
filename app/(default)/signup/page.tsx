@@ -21,9 +21,14 @@ const formSchema = z.object({
   }),
   username: z.string().min(2, { message: 'ユーザー名は2文字以上で入力してください。' }),
   email: z.string().email({ message: '有効なメールアドレスを入力してください。' }),
-  password: z.string().min(8, { message: 'パスワードは8文字以上で入力してください。' }),
+  password: z.string().min(6, { message: 'パスワードは6文字以上で入力してください。' }),
   passwordConfirmation: z.string(),
-  kosenEmail: z.string().email({ message: '有効な高専メールアドレスを入力してください。' }).optional().or(z.literal('')),
+  kosenEmail: z.string().refine(email => {
+    if (!email) return true; // Optional, so empty is allowed
+    return z.string().email().safeParse(email).success && email.match(/@(?:.+\.)?kosen-ac\.jp$/);
+  }, {
+    message: '有効な高専メールアドレスを入力してください。(@kosen-ac.jpドメインが必要です)',
+  }).optional().or(z.literal('')),
   kosenId: z.string().optional(),
   termsAccepted: z.boolean().refine(val => val === true, {
     message: "利用規約とプライバシーポリシーに同意してください。",

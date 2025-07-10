@@ -1,6 +1,6 @@
 import { Collection, Db, ObjectId } from 'mongodb';
 
-export type UserType = 'student' | 'alumnus' | 'examinee';
+export type UserType = 'student' | 'alumnus' | 'examinee' | 'moderator';
 
 export interface User {
   _id?: ObjectId;
@@ -12,6 +12,7 @@ export interface User {
   kosenId?: string;
   kosenEmail?: string;
   createdAt: Date;
+  showModeratorWelcome?: boolean; // Add this new field
 }
 
 export const USERS_COLLECTION = 'users';
